@@ -28,6 +28,7 @@ def test_init_db_creates_tables(tmp_path) -> None:
     assert "linkedin_content" in tables
     assert "recommenders" in tables
     assert "ai_analysis_runs" in tables
+    assert "niw_prong_assessments" in tables
 
 
 def test_seed_is_idempotent(tmp_path) -> None:
@@ -58,7 +59,7 @@ def test_seed_is_idempotent(tmp_path) -> None:
     finally:
         conn.close()
 
-    assert questions == 5
+    assert questions == 13
     assert prongs == 3
     assert roadmap == 4
     assert endeavors == 1

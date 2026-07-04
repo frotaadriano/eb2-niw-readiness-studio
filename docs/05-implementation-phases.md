@@ -18,6 +18,15 @@
 - Implementar scoring educacional inicial.
 - Exibir disclaimers de forma persistente.
 
+Status (implementado):
+
+- Rotas entregues: `/dashboard`, `/assessment` e `/niw`.
+- Assessment EB-2 por categoria com peso, nota 0-5, justificativa, status e evidencias associadas opcionais.
+- Assessment NIW para 3 pilares com score, observacoes, gaps, recomendacoes e tarefas sugeridas.
+- Score por dimensao (0-100), score geral (0-100) e classificacao educacional.
+- Dashboard com cards de score, classificacao, evidencias, gaps, tarefas e alertas principais.
+- Disclaimer de score exibido de forma persistente nas telas.
+
 ## Fase 3: evidencias e roadmap
 
 - CRUD de evidencias.

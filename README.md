@@ -113,4 +113,10 @@ pytest -q
 
 ### Current status
 
-Phase 1 foundation implemented: Flask + SQLite local-first app, initial schema, idempotent seed, PT-BR/EN-US i18n, language selector persisted in `settings`, and initial routes (`/`, `/settings`, `/about`, `/health`).
+Phase 2 implemented: readiness dashboard and assessments with local persistence.
+
+- New routes: `/dashboard`, `/assessment`, `/niw`.
+- EB-2 assessment with weighted questions (0-5), justification, status badge, and optional evidence references.
+- NIW assessment for the 3 prongs with score, observations, gaps, practical recommendations, and suggested tasks.
+- Educational scoring engine with 0-100 dimension scores, 0-100 overall score, and readiness classification bands.
+- Persistent legal/organizational disclaimers across user-facing pages.
