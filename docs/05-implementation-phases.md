@@ -65,6 +65,12 @@ Status (implementado):
 - Garantir fallback e paridade de chaves.
 - Cobrir i18n com testes.
 
+Status (implementado):
+
+- Fallback de locale configurado para `en-US` quando a lingua solicitada nao existe.
+- Paridade de chaves validada entre `locales/pt-BR.json` e `locales/en-US.json`.
+- Cobertura de testes para fallback, paridade de chaves e renderizacao da UI principal em EN-US.
+
 ## Fase 6: AI providers Mock, OpenAI, Azure OpenAI e Ollama
 
 - Consolidar interface comum.

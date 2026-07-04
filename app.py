@@ -15,6 +15,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).parent
 DEFAULT_DB_PATH = str(BASE_DIR / "data" / "app.db")
 DEFAULT_LOCALE = "pt-BR"
+FALLBACK_LOCALE = "en-US"
 SUPPORTED_LOCALES = ("pt-BR", "en-US")
 
 ASSESSMENT_DIMENSIONS = [
@@ -151,7 +152,7 @@ RECOMMENDER_STATUS_OPTIONS = ["prospect", "contacted", "confirmed", "declined"]
 
 def load_locale(locale: str) -> dict[str, str]:
     locale_path = BASE_DIR / "locales" / f"{locale}.json"
-    fallback_path = BASE_DIR / "locales" / f"{DEFAULT_LOCALE}.json"
+    fallback_path = BASE_DIR / "locales" / f"{FALLBACK_LOCALE}.json"
     if locale_path.exists():
         return json.loads(locale_path.read_text(encoding="utf-8"))
     return json.loads(fallback_path.read_text(encoding="utf-8"))
