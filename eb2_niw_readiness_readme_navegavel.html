@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EB2-NIW Readiness Studio — README navegável</title>
+  <meta name="description" content="README navegável e profissional para o projeto EB2-NIW Readiness Studio.">
+  <style>
+:root{
+  --bg:#f6f8fb;
+  --surface:#ffffff;
+  --surface-2:#f1f5f9;
+  --surface-3:#eef2ff;
+  --ink:#0f172a;
+  --muted:#64748b;
+  --muted-2:#94a3b8;
+  --line:#e2e8f0;
+  --line-2:#cbd5e1;
+  --brand:#2563eb;
+  --brand-2:#4f46e5;
+  --brand-3:#0f766e;
+  --danger:#b42318;
+  --warning:#b54708;
+  --success:#067647;
+  --code-bg:#0b1220;
+  --code-text:#e5edff;
+  --shadow:0 20px 45px rgba(15,23,42,.08);
+  --shadow-sm:0 8px 20px rgba(15,23,42,.06);
+  --radius:18px;
+  --sidebar:316px;
+  --topbar:64px;
+}
+[data-theme="dark"]{
+  --bg:#0b1220;
+  --surface:#111827;
+  --surface-2:#172033;
+  --surface-3:#111f3d;
+  --ink:#f8fafc;
+  --muted:#aab6c8;
+  --muted-2:#75849a;
+  --line:#263449;
+  --line-2:#3a4a63;
+  --brand:#7aa2ff;
+  --brand-2:#a78bfa;
+  --brand-3:#5eead4;
+  --code-bg:#070b14;
+  --shadow:0 20px 45px rgba(0,0,0,.28);
+  --shadow-sm:0 8px 20px rgba(0,0,0,.22);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 18% -10%, rgba(37,99,235,.18), transparent 24rem),
+    radial-gradient(circle at 90% 8%, rgba(79,70,229,.12), transparent 26rem),
+    var(--bg);
+  line-height:1.62;
+}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+.skip{
+  position:absolute;left:-999px;top:0;background:var(--surface);padding:10px 14px;z-index:999
+}
+.skip:focus{left:12px;top:12px;border:1px solid var(--line);border-radius:10px}
+.progress{
+  position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--brand),var(--brand-2),var(--brand-3));z-index:2000
+}
+.topbar{
+  position:sticky;top:0;z-index:1000;
+  height:var(--topbar);
+  border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.82);
+  backdrop-filter:saturate(180%) blur(16px);
+}
+[data-theme="dark"] .topbar{background:rgba(17,24,39,.86)}
+.topbar-inner{
+  display:flex;align-items:center;gap:14px;
+  max-width:1440px;margin:0 auto;height:100%;padding:0 24px;
+}
+.brand{
+  display:flex;align-items:center;gap:12px;min-width:250px;font-weight:800;color:var(--ink)
+}
+.brand-mark{
+  width:34px;height:34px;border-radius:10px;
+  display:grid;place-items:center;color:white;font-size:17px;font-weight:900;
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  box-shadow:0 10px 24px rgba(37,99,235,.25);
+}
+.search-wrap{position:relative;flex:1;max-width:520px}
+.search-wrap input{
+  width:100%;border:1px solid var(--line);background:var(--surface);
+  border-radius:999px;padding:11px 44px 11px 42px;color:var(--ink);
+  outline:none;box-shadow:var(--shadow-sm)
+}
+.search-wrap svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.kbd{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  border:1px solid var(--line);background:var(--surface-2);border-radius:7px;
+  font-size:11px;color:var(--muted);padding:1px 6px
+}
+.top-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.icon-btn,.mobile-btn{
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  border-radius:12px;padding:9px 11px;font-weight:700;cursor:pointer
+}
+.icon-btn:hover,.mobile-btn:hover{border-color:var(--line-2);box-shadow:var(--shadow-sm)}
+.mobile-btn{display:none}
+
+.shell{
+  display:grid;grid-template-columns:var(--sidebar) minmax(0,1fr);
+  max-width:1440px;margin:0 auto;
+}
+.sidebar{
+  position:sticky;top:var(--topbar);height:calc(100vh - var(--topbar));
+  overflow:auto;padding:24px 18px;border-right:1px solid var(--line)
+}
+.sidebar-card{
+  background:linear-gradient(180deg,var(--surface),var(--surface-2));
+  border:1px solid var(--line);border-radius:20px;padding:16px;
+  box-shadow:var(--shadow-sm);margin-bottom:18px
+}
+.sidebar-card strong{display:block;margin-bottom:4px}
+.sidebar-card p{margin:0;color:var(--muted);font-size:13px}
+.nav-label{
+  color:var(--muted);font-size:11px;font-weight:900;letter-spacing:.12em;
+  text-transform:uppercase;margin:20px 10px 8px
+}
+.toc-link{
+  display:flex;gap:9px;align-items:flex-start;
+  padding:8px 10px;border-radius:10px;color:var(--muted);
+  font-size:14px;line-height:1.25;text-decoration:none;border:1px solid transparent
+}
+.toc-link span{font-size:10px;margin-top:2px;color:var(--muted-2)}
+.toc-link:hover{background:var(--surface-2);text-decoration:none;color:var(--ink)}
+.toc-link.active{background:var(--surface-3);color:var(--brand);border-color:rgba(37,99,235,.16);font-weight:750}
+.toc-link.level-3{padding-left:24px;font-size:13px}
+.main{min-width:0;padding:32px 32px 72px}
+.hero{
+  position:relative;overflow:hidden;
+  background:
+    linear-gradient(135deg,rgba(37,99,235,.08),rgba(79,70,229,.09)),
+    var(--surface);
+  border:1px solid var(--line);border-radius:28px;padding:42px;
+  box-shadow:var(--shadow);margin-bottom:22px
+}
+.hero:after{
+  content:"";position:absolute;right:-90px;top:-110px;width:360px;height:360px;border-radius:50%;
+  background:radial-gradient(circle,rgba(37,99,235,.18),transparent 65%);
+}
+.eyebrow{
+  display:inline-flex;gap:8px;align-items:center;
+  color:var(--brand);font-size:12px;text-transform:uppercase;letter-spacing:.14em;font-weight:900
+}
+.hero h1{font-size:48px;line-height:1.04;margin:14px 0 14px;max-width:860px;letter-spacing:-.04em}
+.hero p{font-size:18px;color:var(--muted);max-width:800px;margin:0}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 15px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink);font-weight:800;text-decoration:none;
+  box-shadow:var(--shadow-sm)
+}
+.btn:hover{text-decoration:none;transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand-2));border:0;color:white}
+.stats{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0 26px
+}
+.stat{
+  background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow-sm)
+}
+.stat .num{font-size:24px;font-weight:900;letter-spacing:-.03em}
+.stat .label{color:var(--muted);font-size:13px;margin-top:2px}
+.callout{
+  display:flex;gap:14px;padding:16px 18px;border-radius:18px;margin:22px 0;
+  border:1px solid #fedf89;background:#fffaeb;color:#7a2e0e
+}
+[data-theme="dark"] .callout{background:rgba(181,71,8,.12);border-color:rgba(251,191,36,.25);color:#fde68a}
+.quick-grid{
+  display:grid;grid-template-columns:1.1fr .9fr;gap:18px;margin-bottom:26px
+}
+.panel{
+  background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:var(--shadow-sm)
+}
+.panel h2,.panel h3{margin-top:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{
+  padding:6px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);
+  color:var(--muted);font-size:12px;font-weight:750
+}
+.mini-list{display:grid;gap:9px;margin-top:12px}
+.mini-list div{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);
+  border-radius:14px;background:var(--surface-2);font-size:14px
+}
+.mini-list b{
+  width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
+  background:var(--brand);color:white;font-size:12px
+}
+.article{
+  background:var(--surface);border:1px solid var(--line);border-radius:26px;
+  padding:34px 46px;box-shadow:var(--shadow)
+}
+.article h1,.article h2,.article h3,.article h4{line-height:1.22;letter-spacing:-.02em;color:var(--ink);scroll-margin-top:90px}
+.article h1{font-size:34px;margin-top:0;border-bottom:1px solid var(--line);padding-bottom:18px}
+.article h2{
+  font-size:30px;margin-top:2.3em;padding-top:18px;border-top:1px solid var(--line)
+}
+.article h3{font-size:21px;margin-top:1.7em}
+.article p{color:var(--muted);margin:10px 0}
+.article ul{
+  margin:12px 0 18px;padding-left:0;list-style:none;display:grid;gap:8px
+}
+.article li{
+  position:relative;padding:10px 12px 10px 38px;border:1px solid var(--line);
+  background:var(--surface-2);border-radius:14px;color:var(--ink)
+}
+.article li:before{
+  content:"";position:absolute;left:14px;top:18px;width:8px;height:8px;border-radius:50%;
+  background:linear-gradient(135deg,var(--brand),var(--brand-3))
+}
+.article code{
+  background:var(--surface-2);border:1px solid var(--line);border-radius:7px;
+  padding:2px 6px;color:var(--brand-2);font-weight:750
+}
+.codeblock{position:relative;margin:16px 0}
+pre{
+  margin:0;background:var(--code-bg);color:var(--code-text);
+  border-radius:16px;padding:18px 18px;overflow:auto;border:1px solid #1f2a44
+}
+pre code{background:transparent;border:0;color:inherit;padding:0}
+.copy-code{
+  position:absolute;right:10px;top:10px;border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.08);color:#dbeafe;border-radius:9px;padding:6px 9px;
+  font-size:12px;cursor:pointer
+}
+.anchor{opacity:0;margin-left:8px;font-size:.75em}
+h1:hover .anchor,h2:hover .anchor,h3:hover .anchor{opacity:.45}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+.footer{
+  margin-top:24px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap
+}
+.no-results{
+  display:none;background:var(--surface);border:1px dashed var(--line-2);padding:18px;border-radius:18px;color:var(--muted);margin:16px 0
+}
+mark{background:#fef3c7;color:#78350f;border-radius:4px;padding:0 3px}
+@media(max-width:1100px){
+  :root{--sidebar:280px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .quick-grid{grid-template-columns:1fr}
+}
+@media(max-width:860px){
+  .mobile-btn{display:inline-flex}
+  .brand{min-width:auto}
+  .brand span{display:none}
+  .shell{grid-template-columns:1fr}
+  .sidebar{
+    position:fixed;top:var(--topbar);left:0;bottom:0;width:min(86vw,330px);height:auto;
+    background:var(--surface);z-index:1100;transform:translateX(-105%);
+    transition:.2s ease;box-shadow:var(--shadow)
+  }
+  body.nav-open .sidebar{transform:translateX(0)}
+  .main{padding:22px 16px 56px}
+  .hero{padding:30px 24px}
+  .hero h1{font-size:34px}
+  .article{padding:26px 20px}
+  .topbar-inner{padding:0 14px}
+  .search-wrap{max-width:none}
+}
+@media(max-width:560px){
+  .top-actions .btn{display:none}
+  .stats{grid-template-columns:1fr}
+  .hero-actions{display:grid}
+}
+@media print{
+  .topbar,.sidebar,.progress,.hero-actions,.copy-code{display:none!important}
+  .shell{display:block}
+  .main{padding:0}
+  .hero,.article,.panel,.stat{box-shadow:none;border-color:#ddd}
+}
+</style>
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+  <div class="progress" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <button class="mobile-btn" id="mobileNav" type="button" aria-label="Abrir navegação">☰</button>
+      <a class="brand" href="#eb2-niw-readiness-studio" aria-label="Início">
+        <span class="brand-mark">E</span>
+        <span>EB2-NIW Readiness Studio</span>
+      </a>
+      <div class="search-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.35-4.35M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="docSearch" type="search" placeholder="Buscar seção, tecnologia ou comando..." autocomplete="off">
+        <span class="kbd">/</span>
+      </div>
+      <div class="top-actions">
+        <a class="btn" href="#instalacao">Instalar</a>
+        <a class="btn" href="#portfolio-value">Portfolio</a>
+        <button class="icon-btn" id="themeToggle" type="button" aria-label="Alternar tema">◐</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar" aria-label="Navegação do documento">
+      <div class="sidebar-card">
+        <strong>README final</strong>
+        <p>Documento navegável com busca, anchors, tema claro/escuro e comandos copiáveis.</p>
+      </div>
+      <div class="nav-label">Seções</div>
+      <nav><a class="toc-link level-2" href="#pt-br" data-target="pt-br"><span>●</span>PT-BR</a>
+<a class="toc-link level-3" href="#o-que-este-projeto-e" data-target="o-que-este-projeto-e"><span>–</span>O que este projeto e</a>
+<a class="toc-link level-3" href="#objetivo" data-target="objetivo"><span>–</span>Objetivo</a>
+<a class="toc-link level-3" href="#disclaimer-juridico-e-de-privacidade" data-target="disclaimer-juridico-e-de-privacidade"><span>–</span>Disclaimer juridico e de privacidade</a>
+<a class="toc-link level-3" href="#principais-funcionalidades" data-target="principais-funcionalidades"><span>–</span>Principais funcionalidades</a>
+<a class="toc-link level-3" href="#arquitetura" data-target="arquitetura"><span>–</span>Arquitetura</a>
+<a class="toc-link level-3" href="#stack" data-target="stack"><span>–</span>Stack</a>
+<a class="toc-link level-3" href="#providers-de-ia" data-target="providers-de-ia"><span>–</span>Providers de IA</a>
+<a class="toc-link level-3" href="#i18n-pt-br-en-us" data-target="i18n-pt-br-en-us"><span>–</span>i18n PT-BR/EN-US</a>
+<a class="toc-link level-3" href="#spec-driven-development" data-target="spec-driven-development"><span>–</span>Spec-driven development</a>
+<a class="toc-link level-3" href="#test-harness" data-target="test-harness"><span>–</span>Test harness</a>
+<a class="toc-link level-3" href="#instalacao" data-target="instalacao"><span>–</span>Instalacao</a>
+<a class="toc-link level-3" href="#execucao" data-target="execucao"><span>–</span>Execucao</a>
+<a class="toc-link level-3" href="#testes" data-target="testes"><span>–</span>Testes</a>
+<a class="toc-link level-3" href="#uso-com-mockprovider" data-target="uso-com-mockprovider"><span>–</span>Uso com MockProvider</a>
+<a class="toc-link level-3" href="#uso-com-openai" data-target="uso-com-openai"><span>–</span>Uso com OpenAI</a>
+<a class="toc-link level-3" href="#uso-com-azure-openai" data-target="uso-com-azure-openai"><span>–</span>Uso com Azure OpenAI</a>
+<a class="toc-link level-3" href="#uso-com-ollama" data-target="uso-com-ollama"><span>–</span>Uso com Ollama</a>
+<a class="toc-link level-3" href="#roadmap-futuro" data-target="roadmap-futuro"><span>–</span>Roadmap futuro</a>
+<a class="toc-link level-3" href="#portfolio-value" data-target="portfolio-value"><span>–</span>Portfolio Value</a>
+<a class="toc-link level-3" href="#what-this-project-is-not" data-target="what-this-project-is-not"><span>–</span>What this project is not</a>
+<a class="toc-link level-3" href="#estrutura" data-target="estrutura"><span>–</span>Estrutura</a>
+<a class="toc-link level-2" href="#en-us" data-target="en-us"><span>●</span>EN-US</a>
+<a class="toc-link level-3" href="#what-this-project-is" data-target="what-this-project-is"><span>–</span>What this project is</a>
+<a class="toc-link level-3" href="#goal" data-target="goal"><span>–</span>Goal</a>
+<a class="toc-link level-3" href="#legal-and-privacy-disclaimer" data-target="legal-and-privacy-disclaimer"><span>–</span>Legal and privacy disclaimer</a>
+<a class="toc-link level-3" href="#main-features" data-target="main-features"><span>–</span>Main features</a>
+<a class="toc-link level-3" href="#architecture" data-target="architecture"><span>–</span>Architecture</a>
+<a class="toc-link level-3" href="#stack-2" data-target="stack-2"><span>–</span>Stack</a>
+<a class="toc-link level-3" href="#ai-providers" data-target="ai-providers"><span>–</span>AI providers</a>
+<a class="toc-link level-3" href="#pt-br-en-us-i18n" data-target="pt-br-en-us-i18n"><span>–</span>PT-BR/EN-US i18n</a>
+<a class="toc-link level-3" href="#spec-driven-development-2" data-target="spec-driven-development-2"><span>–</span>Spec-driven development</a>
+<a class="toc-link level-3" href="#test-harness-2" data-target="test-harness-2"><span>–</span>Test harness</a>
+<a class="toc-link level-3" href="#install" data-target="install"><span>–</span>Install</a>
+<a class="toc-link level-3" href="#run" data-target="run"><span>–</span>Run</a>
+<a class="toc-link level-3" href="#test" data-target="test"><span>–</span>Test</a>
+<a class="toc-link level-3" href="#using-mockprovider" data-target="using-mockprovider"><span>–</span>Using MockProvider</a>
+<a class="toc-link level-3" href="#using-openai" data-target="using-openai"><span>–</span>Using OpenAI</a>
+<a class="toc-link level-3" href="#using-azure-openai" data-target="using-azure-openai"><span>–</span>Using Azure OpenAI</a>
+<a class="toc-link level-3" href="#using-ollama" data-target="using-ollama"><span>–</span>Using Ollama</a>
+<a class="toc-link level-3" href="#future-roadmap" data-target="future-roadmap"><span>–</span>Future roadmap</a>
+<a class="toc-link level-3" href="#portfolio-value-2" data-target="portfolio-value-2"><span>–</span>Portfolio Value</a>
+<a class="toc-link level-3" href="#what-this-project-is-not-2" data-target="what-this-project-is-not-2"><span>–</span>What this project is not</a>
+<a class="toc-link level-3" href="#structure" data-target="structure"><span>–</span>Structure</a></nav>
+    </aside>
+
+    <main class="main" id="conteudo">
+      <section class="hero">
+        <div class="eyebrow">Local-first · Spec-driven · Flask + SQLite</div>
+        <h1>README navegável com padrão profissional de documentação</h1>
+        <p>Versão refinada para GitHub Pages, portfolio e demonstração executiva: navegação lateral, busca rápida, hero claro, blocos de valor, comandos copiáveis, acessibilidade básica e layout responsivo.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#pt-br">Ler em PT-BR</a>
+          <a class="btn" href="#en-us">Read in EN-US</a>
+          <a class="btn" href="#test-harness">Ver harness</a>
+          <a class="btn" href="#using-openai">AI providers</a>
+        </div>
+      </section>
+
+      <section class="stats" aria-label="Resumo de capacidades">
+        <div class="stat"><div class="num">4</div><div class="label">Providers de IA previstos</div></div>
+        <div class="stat"><div class="num">2</div><div class="label">Idiomas: PT-BR e EN-US</div></div>
+        <div class="stat"><div class="num">SQLite</div><div class="label">Persistência local-first</div></div>
+        <div class="stat"><div class="num">Pytest</div><div class="label">Harness de regressão</div></div>
+      </section>
+
+      <section class="quick-grid">
+        <div class="panel">
+          <h2>Leitura rápida</h2>
+          <p>Este README apresenta uma aplicação web local-first para organização educacional de prontidão EB-2/NIW, evidências, lacunas, roadmap, narrativa técnica e análises assistidas por IA.</p>
+          <div class="chips">
+            <span class="chip">Python 3.12+</span>
+            <span class="chip">Flask</span>
+            <span class="chip">SQLite</span>
+            <span class="chip">OpenAI</span>
+            <span class="chip">Azure OpenAI</span>
+            <span class="chip">Ollama</span>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Fluxo local</h2>
+          <div class="mini-list">
+            <div><b>1</b> Criar ambiente virtual</div>
+            <div><b>2</b> Instalar dependências</div>
+            <div><b>3</b> Rodar <code>python app.py</code></div>
+            <div><b>4</b> Validar com <code>pytest -q</code></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="callout">
+        <strong>Atenção:</strong>
+        <span>O projeto é educacional e organizacional. Não é aconselhamento jurídico/imigratório, não promete aprovação e não calcula chance real.</span>
+      </div>
+
+      <div id="noResults" class="no-results">Nenhum resultado encontrado na navegação/conteúdo. Tente buscar por “Flask”, “OpenAI”, “testes”, “portfolio” ou “privacidade”.</div>
+
+      <article class="article">
+        <h1 id="eb2-niw-readiness-studio">EB2-NIW Readiness Studio<a class="anchor" href="#eb2-niw-readiness-studio" aria-label="Link permanente">#</a></h1>
+<p>Local-first, spec-driven Flask app for organizing EB-2/NIW readiness evidence, gaps, roadmap tasks, and portfolio narratives without turning the project into legal advice.</p>
+<p><a href="#pt-br">PT-BR</a> | <a href="#en-us">EN-US</a></p>
+<section class="doc-section" data-title="PT-BR">
+<h2 id="pt-br">PT-BR<a class="anchor" href="#pt-br" aria-label="Link permanente">#</a></h2>
+<h3 id="o-que-este-projeto-e">O que este projeto e<a class="anchor" href="#o-que-este-projeto-e" aria-label="Link permanente">#</a></h3>
+<p>EB2-NIW Readiness Studio e uma aplicacao web local-first para organizacao educacional e organizacional de prontidao EB-2/NIW. O foco e estruturar evidencias, lacunas, tarefas e narrativa tecnica com privacidade por padrao e providers de IA plugaveis.</p>
+<h3 id="objetivo">Objetivo<a class="anchor" href="#objetivo" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>Organizar evidencias profissionais, gaps e roadmap de evolucao.</li>
+<li>Apoiar o planejamento de autoridade tecnica, projetos publicos e conteudo para portfolio.</li>
+<li>Permitir analises assistidas por IA com contrato comum para Mock, OpenAI, Azure OpenAI e Ollama.</li>
+<li>Demonstrar uma arquitetura simples, testavel e pronta para portfolio tecnico publico.</li>
+</ul>
+<h3 id="disclaimer-juridico-e-de-privacidade">Disclaimer juridico e de privacidade<a class="anchor" href="#disclaimer-juridico-e-de-privacidade" aria-label="Link permanente">#</a></h3>
+<p>Este projeto e educacional e organizacional.</p>
+<p>Nao e aconselhamento juridico.</p>
+<p>Nao e aconselhamento imigratorio.</p>
+<p>Nao substitui advogado.</p>
+<p>Nao promete aprovacao.</p>
+<p>Nao estima chance real de aprovacao.</p>
+<p>O score e apenas organizacional.</p>
+<p>Use apenas dados fake/demo em publico e nao use evidencias sensiveis em demos abertas.</p>
+<h3 id="principais-funcionalidades">Principais funcionalidades<a class="anchor" href="#principais-funcionalidades" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>Dashboard com resumo de prontidao, score educacional e alertas.</li>
+<li>Assessment EB-2 por dimensao com nota, justificativa, status e evidencias opcionais.</li>
+<li>Assessment NIW para os 3 pilares com score e plano de acao.</li>
+<li>CRUD de evidencias, gaps e roadmap com filtros e badges de status.</li>
+<li>Proposed Endeavor, Autoridade Tecnica, Projetos GitHub, Conteudo LinkedIn e Recomendadores.</li>
+<li>Exportacao de relatorio organizacional local com filtro de evidencias privadas.</li>
+<li>i18n PT-BR/EN-US com fallback para EN-US.</li>
+</ul>
+<h3 id="arquitetura">Arquitetura<a class="anchor" href="#arquitetura" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>Flask com HTML renderizado no backend.</li>
+<li>SQLite local como persistencia principal.</li>
+<li>SQL direto sem ORM.</li>
+<li>Providers de IA em camada de abstracao simples.</li>
+<li>Docs spec-driven e ADRs para as decisoes principais.</li>
+<li>Test harness com pytest e scripts de smoke/reset/export.</li>
+</ul>
+<h3 id="stack">Stack<a class="anchor" href="#stack" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>Python 3.12+</li>
+<li>Flask</li>
+<li>SQLite</li>
+<li>Pytest</li>
+<li>python-dotenv</li>
+<li>requests</li>
+</ul>
+<h3 id="providers-de-ia">Providers de IA<a class="anchor" href="#providers-de-ia" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>MockProvider: modo offline, deterministico e seguro para demo local.</li>
+<li>OpenAIProvider: integracao via API key e modelo configurado por ambiente.</li>
+<li>AzureOpenAIProvider: integracao via endpoint, deployment e chave por ambiente.</li>
+<li>OllamaProvider: integracao local ou remota via HTTP.</li>
+</ul>
+<h3 id="i18n-pt-br-en-us">i18n PT-BR/EN-US<a class="anchor" href="#i18n-pt-br-en-us" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>Traducoes em <code>locales/pt-BR.json</code> e <code>locales/en-US.json</code>.</li>
+<li>Paridade de chaves mantida como regra de projeto.</li>
+<li>Fallback para <code>en-US</code> quando o locale solicitado nao existir.</li>
+</ul>
+<h3 id="spec-driven-development">Spec-driven development<a class="anchor" href="#spec-driven-development" aria-label="Link permanente">#</a></h3>
+<p>O repositorio foi organizado a partir de contexto, especificacao, modelo de dominio, arquitetura, plano e fases. As decisoes ficam documentadas para facilitar manutencao, revisao e uso com assistentes de codigo.</p>
+<h3 id="test-harness">Test harness<a class="anchor" href="#test-harness" aria-label="Link permanente">#</a></h3>
+<p>O projeto inclui testes para i18n, banco, scoring, contratos de IA, privacidade e exportacao. Scripts auxiliares validam smoke test, reset de banco demo e exportacao de relatorio.</p>
+<h3 id="instalacao">Instalacao<a class="anchor" href="#instalacao" aria-label="Link permanente">#</a></h3>
+<div class="codeblock"><button class="copy-code" type="button">Copy</button><pre><code>python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt</code></pre></div>
+<h3 id="execucao">Execucao<a class="anchor" href="#execucao" aria-label="Link permanente">#</a></h3>
+<div class="codeblock"><button class="copy-code" type="button">Copy</button><pre><code>python app.py</code></pre></div>
+<p>Abra: http://127.0.0.1:5000</p>
+<p>O banco SQLite local e criado automaticamente em <code>data/app.db</code> quando a aplicacao sobe. Para demo publica, mantenha os dados fake e privados fora do repositorio.</p>
+<h3 id="testes">Testes<a class="anchor" href="#testes" aria-label="Link permanente">#</a></h3>
+<div class="codeblock"><button class="copy-code" type="button">Copy</button><pre><code>pytest -q
+python scripts/smoke_test.py
+python scripts/reset_demo_db.py
+python scripts/export_demo_report.py</code></pre></div>
+<h3 id="uso-com-mockprovider">Uso com MockProvider<a class="anchor" href="#uso-com-mockprovider" aria-label="Link permanente">#</a></h3>
+<p>Defina <code>AI_PROVIDER=mock</code> no <code>.env</code> e execute a aplicacao localmente. Esse modo nao faz chamadas externas e e o recomendado para demo e desenvolvimento offline.</p>
+<h3 id="uso-com-openai">Uso com OpenAI<a class="anchor" href="#uso-com-openai" aria-label="Link permanente">#</a></h3>
+<p>Configure <code>AI_PROVIDER=openai</code>, <code>OPENAI_API_KEY</code> e <code>OPENAI_MODEL</code> no <code>.env</code>. Revise o conteudo antes de enviar para qualquer provider externo e nao envie evidencias privadas.</p>
+<h3 id="uso-com-azure-openai">Uso com Azure OpenAI<a class="anchor" href="#uso-com-azure-openai" aria-label="Link permanente">#</a></h3>
+<p>Configure <code>AI_PROVIDER=azure_openai</code>, <code>AZURE_OPENAI_API_KEY</code>, <code>AZURE_OPENAI_ENDPOINT</code> e <code>AZURE_OPENAI_DEPLOYMENT</code> no <code>.env</code>. Preserve a mesma regra de privacidade para demos e experimentos.</p>
+<h3 id="uso-com-ollama">Uso com Ollama<a class="anchor" href="#uso-com-ollama" aria-label="Link permanente">#</a></h3>
+<p>Configure <code>AI_PROVIDER=ollama</code>, <code>OLLAMA_BASE_URL</code> e <code>OLLAMA_MODEL</code>. Esse modo permite um fluxo local ou self-hosted sem depender de nuvem publica.</p>
+<h3 id="roadmap-futuro">Roadmap futuro<a class="anchor" href="#roadmap-futuro" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>Versionamento de snapshots de evolucao.</li>
+<li>Modo multi-perfil local.</li>
+<li>Exportacoes adicionais e relatorios mais ricos.</li>
+<li>Melhorias de UX e narrativa de portfolio.</li>
+<li>Integracoes opcionais com calendarios e trackers.</li>
+</ul>
+<h3 id="portfolio-value">Portfolio Value<a class="anchor" href="#portfolio-value" aria-label="Link permanente">#</a></h3>
+<p>Este projeto demonstra Python, Flask, SQLite, arquitetura local-first, abstracao de providers de IA, integracao com OpenAI/Azure OpenAI/Ollama, i18n, spec-driven development, privacy-by-design, harness de testes, workflows estruturados de assessment e geracao de exportacoes/relatorios.</p>
+<h3 id="what-this-project-is-not">What this project is not<a class="anchor" href="#what-this-project-is-not" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>Nao e aconselhamento juridico.</li>
+<li>Nao substitui advogado.</li>
+<li>Nao calcula chance real de aprovacao.</li>
+<li>Nao garante aprovacao.</li>
+<li>Nao deve armazenar dados sensiveis em repositorio publico.</li>
+<li>Nao deve ser usado como unica base de decisao.</li>
+</ul>
+<h3 id="estrutura">Estrutura<a class="anchor" href="#estrutura" aria-label="Link permanente">#</a></h3>
+<ul>
+<li><code>docs/</code>: contexto, especificacao, dominio, arquitetura, plano, fases, contratos e posicionamento.</li>
+<li><code>tests/</code>: suite de regressao para comportamento critico.</li>
+<li><code>scripts/</code>: utilitarios de smoke test, reset de banco e export demo.</li>
+<li><code>locales/</code>: internacionalizacao PT-BR e EN-US.</li>
+</ul>
+</section><hr>
+<section class="doc-section" data-title="EN-US">
+<h2 id="en-us">EN-US<a class="anchor" href="#en-us" aria-label="Link permanente">#</a></h2>
+<h3 id="what-this-project-is">What this project is<a class="anchor" href="#what-this-project-is" aria-label="Link permanente">#</a></h3>
+<p>EB2-NIW Readiness Studio is a local-first web application for educational and organizational EB-2/NIW readiness planning. It helps structure evidence, gaps, roadmap tasks, and technical storytelling with privacy by default and pluggable AI providers.</p>
+<h3 id="goal">Goal<a class="anchor" href="#goal" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>Organize professional evidence, gaps, and roadmap tasks.</li>
+<li>Support technical authority planning, public projects, and portfolio content.</li>
+<li>Enable AI-assisted analysis through a common contract for Mock, OpenAI, Azure OpenAI, and Ollama.</li>
+<li>Demonstrate a simple, testable architecture suitable for a public technical portfolio.</li>
+</ul>
+<h3 id="legal-and-privacy-disclaimer">Legal and privacy disclaimer<a class="anchor" href="#legal-and-privacy-disclaimer" aria-label="Link permanente">#</a></h3>
+<p>This project is educational and organizational.</p>
+<p>It is not legal advice.</p>
+<p>It is not immigration advice.</p>
+<p>It does not replace an attorney.</p>
+<p>It does not promise approval.</p>
+<p>It does not estimate real approval odds.</p>
+<p>The score is organizational only.</p>
+<p>Use fake/demo data in public and avoid sensitive evidence in open demos.</p>
+<h3 id="main-features">Main features<a class="anchor" href="#main-features" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>Readiness dashboard with educational score and alerts.</li>
+<li>EB-2 assessment by dimension with score, justification, status, and optional evidence links.</li>
+<li>NIW assessment for the 3 prongs with score and action planning.</li>
+<li>CRUD for evidences, gaps, and roadmap tasks with filters and status badges.</li>
+<li>Proposed Endeavor, Technical Authority, GitHub Projects, LinkedIn Content, and Recommenders.</li>
+<li>Local organizational report export with private-evidence filtering.</li>
+<li>PT-BR/EN-US i18n with EN-US fallback.</li>
+</ul>
+<h3 id="architecture">Architecture<a class="anchor" href="#architecture" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>Flask with backend-rendered HTML.</li>
+<li>Local SQLite persistence.</li>
+<li>Direct SQL without an ORM.</li>
+<li>Lightweight abstraction for AI providers.</li>
+<li>Spec-driven docs and ADRs for key decisions.</li>
+<li>Test harness with pytest plus smoke/reset/export scripts.</li>
+</ul>
+<h3 id="stack-2">Stack<a class="anchor" href="#stack-2" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>Python 3.12+</li>
+<li>Flask</li>
+<li>SQLite</li>
+<li>Pytest</li>
+<li>python-dotenv</li>
+<li>requests</li>
+</ul>
+<h3 id="ai-providers">AI providers<a class="anchor" href="#ai-providers" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>MockProvider: offline, deterministic, safe for local demo.</li>
+<li>OpenAIProvider: API key and model configured through environment.</li>
+<li>AzureOpenAIProvider: endpoint, deployment, and key configured through environment.</li>
+<li>OllamaProvider: local or remote HTTP-based integration.</li>
+</ul>
+<h3 id="pt-br-en-us-i18n">PT-BR/EN-US i18n<a class="anchor" href="#pt-br-en-us-i18n" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>Translations live in <code>locales/pt-BR.json</code> and <code>locales/en-US.json</code>.</li>
+<li>Key parity is part of the project rules.</li>
+<li>Fallback to <code>en-US</code> when the requested locale does not exist.</li>
+</ul>
+<h3 id="spec-driven-development-2">Spec-driven development<a class="anchor" href="#spec-driven-development-2" aria-label="Link permanente">#</a></h3>
+<p>The repository was organized from context, product spec, domain model, architecture, implementation plan, and implementation phases. Decisions are documented to keep maintenance and collaboration predictable.</p>
+<h3 id="test-harness-2">Test harness<a class="anchor" href="#test-harness-2" aria-label="Link permanente">#</a></h3>
+<p>The project includes tests for i18n, database behavior, scoring, AI provider contracts, privacy, and exports. Helper scripts validate smoke tests, demo database reset, and report export.</p>
+<h3 id="install">Install<a class="anchor" href="#install" aria-label="Link permanente">#</a></h3>
+<div class="codeblock"><button class="copy-code" type="button">Copy</button><pre><code>python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt</code></pre></div>
+<h3 id="run">Run<a class="anchor" href="#run" aria-label="Link permanente">#</a></h3>
+<div class="codeblock"><button class="copy-code" type="button">Copy</button><pre><code>python app.py</code></pre></div>
+<p>Open: http://127.0.0.1:5000</p>
+<p>The local SQLite database is created automatically in <code>data/app.db</code> when the app starts. For public demos, keep only fake data and avoid sensitive records in the repository.</p>
+<h3 id="test">Test<a class="anchor" href="#test" aria-label="Link permanente">#</a></h3>
+<div class="codeblock"><button class="copy-code" type="button">Copy</button><pre><code>pytest -q
+python scripts/smoke_test.py
+python scripts/reset_demo_db.py
+python scripts/export_demo_report.py</code></pre></div>
+<h3 id="using-mockprovider">Using MockProvider<a class="anchor" href="#using-mockprovider" aria-label="Link permanente">#</a></h3>
+<p>Set <code>AI_PROVIDER=mock</code> in <code>.env</code> and run locally. This mode performs no external calls and is the recommended option for offline development and public demos.</p>
+<h3 id="using-openai">Using OpenAI<a class="anchor" href="#using-openai" aria-label="Link permanente">#</a></h3>
+<p>Set <code>AI_PROVIDER=openai</code>, <code>OPENAI_API_KEY</code>, and <code>OPENAI_MODEL</code> in <code>.env</code>. Review the prompt payload before sending anything to an external provider and keep private evidence out of the request.</p>
+<h3 id="using-azure-openai">Using Azure OpenAI<a class="anchor" href="#using-azure-openai" aria-label="Link permanente">#</a></h3>
+<p>Set <code>AI_PROVIDER=azure_openai</code>, <code>AZURE_OPENAI_API_KEY</code>, <code>AZURE_OPENAI_ENDPOINT</code>, and <code>AZURE_OPENAI_DEPLOYMENT</code> in <code>.env</code>. Apply the same privacy rules for demos and experiments.</p>
+<h3 id="using-ollama">Using Ollama<a class="anchor" href="#using-ollama" aria-label="Link permanente">#</a></h3>
+<p>Set <code>AI_PROVIDER=ollama</code>, <code>OLLAMA_BASE_URL</code>, and <code>OLLAMA_MODEL</code>. This supports a local or self-hosted workflow without depending on public cloud services.</p>
+<h3 id="future-roadmap">Future roadmap<a class="anchor" href="#future-roadmap" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>Versioned readiness snapshots.</li>
+<li>Multi-profile local mode.</li>
+<li>Richer reports and exports.</li>
+<li>UX and portfolio narrative improvements.</li>
+<li>Optional calendar and tracker integrations.</li>
+</ul>
+<h3 id="portfolio-value-2">Portfolio Value<a class="anchor" href="#portfolio-value-2" aria-label="Link permanente">#</a></h3>
+<p>This project demonstrates Python, Flask, SQLite, local-first architecture, AI provider abstraction, OpenAI/Azure OpenAI/Ollama integration, i18n, spec-driven development, privacy-by-design, a test harness, structured assessment workflows, and report generation.</p>
+<h3 id="what-this-project-is-not-2">What this project is not<a class="anchor" href="#what-this-project-is-not-2" aria-label="Link permanente">#</a></h3>
+<ul>
+<li>It is not legal advice.</li>
+<li>It does not replace an attorney.</li>
+<li>It does not compute real approval odds.</li>
+<li>It does not guarantee approval.</li>
+<li>It should not store sensitive data in a public repository.</li>
+<li>It should not be used as the only basis for decisions.</li>
+</ul>
+<h3 id="structure">Structure<a class="anchor" href="#structure" aria-label="Link permanente">#</a></h3>
+<ul>
+<li><code>docs/</code>: context, spec, domain, architecture, plan, phases, contracts, and positioning.</li>
+<li><code>tests/</code>: regression suite for critical behavior.</li>
+<li><code>scripts/</code>: smoke test, demo DB reset, and demo report export helpers.</li>
+<li><code>locales/</code>: PT-BR and EN-US translations.</li>
+</ul>
+      </article>
+
+      <div class="footer">
+        <span>Gerado em 04/07/2026 a partir do README enviado.</span>
+        <span>Pronto para GitHub Pages ou demo local.</span>
+      </div>
+    </main>
+  </div>
+
+  <script>
+(function(){
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('themeToggle');
+  const savedTheme = localStorage.getItem('theme');
+  if(savedTheme) root.setAttribute('data-theme', savedTheme);
+  themeBtn?.addEventListener('click', () => {
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+  });
+
+  const mobileBtn = document.getElementById('mobileNav');
+  mobileBtn?.addEventListener('click', () => document.body.classList.toggle('nav-open'));
+  document.querySelectorAll('.toc-link').forEach(a => a.addEventListener('click', () => document.body.classList.remove('nav-open')));
+
+  const progress = document.querySelector('.progress');
+  const onScroll = () => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = max > 0 ? (window.scrollY / max) * 100 : 0;
+    progress.style.width = pct + '%';
+  };
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  const links = Array.from(document.querySelectorAll('.toc-link'));
+  const targets = links.map(a => document.getElementById(a.getAttribute('data-target'))).filter(Boolean);
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        links.forEach(l => l.classList.remove('active'));
+        const active = links.find(l => l.getAttribute('data-target') === entry.target.id);
+        active?.classList.add('active');
+      }
+    });
+  }, {rootMargin:'-22% 0px -70% 0px', threshold:0.01});
+  targets.forEach(t => io.observe(t));
+
+  document.querySelectorAll('.copy-code').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const code = btn.parentElement.querySelector('code')?.innerText || '';
+      try {
+        await navigator.clipboard.writeText(code);
+        const old = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => btn.textContent = old, 1200);
+      } catch(e) {
+        btn.textContent = 'Select';
+      }
+    });
+  });
+
+  const input = document.getElementById('docSearch');
+  const noResults = document.getElementById('noResults');
+  const article = document.querySelector('.article');
+  const original = article.innerHTML;
+  const normalize = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  input?.addEventListener('input', () => {
+    const q = input.value.trim();
+    article.innerHTML = original;
+    if(!q){
+      noResults.style.display = 'none';
+      links.forEach(l => l.style.display = '');
+      return;
+    }
+    const nq = normalize(q);
+    let matches = 0;
+    const sections = Array.from(article.querySelectorAll('h2, h3'));
+    sections.forEach(h => {
+      const text = normalize(h.textContent);
+      if(text.includes(nq)) matches++;
+    });
+    links.forEach(l => {
+      const hit = normalize(l.textContent).includes(nq);
+      l.style.display = hit ? '' : 'none';
+    });
+    // lightweight highlight in paragraphs/list items, not code
+    article.querySelectorAll('p, li, h2, h3').forEach(el => {
+      const txt = el.textContent;
+      if(normalize(txt).includes(nq)){
+        matches++;
+        const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        el.innerHTML = el.innerHTML.replace(new RegExp(`(${escaped})`, 'gi'), '<mark>$1</mark>');
+      }
+    });
+    noResults.style.display = matches ? 'none' : 'block';
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if(e.key === '/' && document.activeElement !== input){
+      e.preventDefault();
+      input?.focus();
+    }
+  });
+})();
+</script>
+</body>
+</html>
