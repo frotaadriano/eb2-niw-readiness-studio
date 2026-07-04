@@ -56,11 +56,15 @@ pytest -q
 
 ### Status atual
 
-Fases 2 e 3 implementadas: dashboard/assessment e gestao operacional de evidencias, roadmap e gaps.
+Fases 2, 3 e 4 implementadas: dashboard/assessment, gestao operacional e modulos de narrativa/autoridade.
 
-- Rotas: `/dashboard`, `/assessment`, `/niw`, `/evidences`, `/roadmap`, `/gaps`.
+- Rotas: `/dashboard`, `/assessment`, `/niw`, `/evidences`, `/roadmap`, `/gaps`, `/proposed-endeavor`, `/authority`, `/github-projects`, `/linkedin-content`, `/recommenders`, `/report/export`.
 - CRUD de evidencias com tipo, categoria, relevancia, criterio relacionado, status e flag de envio para IA.
 - CRUD de tarefas de roadmap com horizonte, prioridade, status, data alvo, esforco e impacto.
+- Modulo Proposed Endeavor Builder com versao curta/longa, relevancia, impacto esperado e status.
+- Modulo de Autoridade Tecnica com plano de artigos, talks, comunidades e evidencias publicas.
+- CRUD de projetos GitHub, conteudos LinkedIn e recomendadores com badges de status.
+- Exportacao de relatorio organizacional JSON com filtro automatico de evidencias privadas.
 - Consolidacao automatica de gaps com recomendacoes de acao.
 
 ### Privacidade e dados
@@ -122,13 +126,16 @@ pytest -q
 
 ### Current status
 
-Phases 2 and 3 implemented: readiness dashboard/assessments plus operational evidence, roadmap, and gaps management.
+Phases 2, 3, and 4 implemented: readiness dashboard/assessments plus operational and authority-building modules.
 
-- Routes: `/dashboard`, `/assessment`, `/niw`, `/evidences`, `/roadmap`, `/gaps`.
+- Routes: `/dashboard`, `/assessment`, `/niw`, `/evidences`, `/roadmap`, `/gaps`, `/proposed-endeavor`, `/authority`, `/github-projects`, `/linkedin-content`, `/recommenders`, `/report/export`.
 - EB-2 assessment with weighted questions (0-5), justification, status badge, and optional evidence references.
 - NIW assessment for the 3 prongs with score, observations, gaps, practical recommendations, and suggested tasks.
 - Evidence CRUD with metadata fields, status, and AI sharing privacy flag.
 - Roadmap CRUD with horizon, priority, status, target date, estimated effort, and estimated impact.
+- Proposed endeavor builder with short/long narrative, relevance, expected impact, and status.
+- Technical authority plan plus CRUD for GitHub projects, LinkedIn content, and recommenders.
+- Organizational JSON report export with automatic private evidence filtering.
 - Automatic gaps consolidation with actionable recommendations.
 - Educational scoring engine with 0-100 dimension scores, 0-100 overall score, and readiness classification bands.
 - Persistent legal/organizational disclaimers across user-facing pages.

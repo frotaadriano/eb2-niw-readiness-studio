@@ -65,4 +65,4 @@ def test_seed_is_idempotent(tmp_path) -> None:
     assert roadmap == 4
     assert endeavors == 1
     assert github_projects == 1
-    assert linkedin_posts == 3
+    assert linkedin_posts == 8

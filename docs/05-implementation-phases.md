@@ -47,6 +47,18 @@ Status (implementado):
 - Implementar exportacao de relatorio organizacional.
 - Garantir filtro de conteudo privado.
 
+Status (implementado):
+
+- Rotas entregues: `/proposed-endeavor`, `/proposed-endeavor/new`, `/proposed-endeavor/<id>/edit`, `/proposed-endeavor/<id>/delete`, `/authority`, `/authority/new`, `/authority/<id>/edit`, `/authority/<id>/delete`, `/github-projects`, `/github-projects/new`, `/github-projects/<id>/edit`, `/github-projects/<id>/delete`, `/linkedin-content`, `/linkedin-content/new`, `/linkedin-content/<id>/edit`, `/linkedin-content/<id>/delete`, `/recommenders`, `/recommenders/new`, `/recommenders/<id>/edit` e `/recommenders/<id>/delete`.
+- Proposed Endeavor Builder com campos completos de narrativa curta/longa, impacto, relevancia e status.
+- Autoridade tecnica com plano de evolucao, comunidades, artigos, talks, repositorios e evidencias publicas.
+- Projetos GitHub com problema resolvido, status, impacto, evidencias e criterio relacionado.
+- Conteudo LinkedIn com tipo, objetivo, planejamento e vinculo com evidencias.
+- Recomendadores com relacao profissional, independencia, forca potencial da carta e status.
+- Seed demo atualizado com exemplo default de proposed endeavor, projeto exemplo do proprio studio e ideias de conteudo LinkedIn.
+- Exportacao de relatorio organizacional em JSON local pela rota `/report/export` (com opcao de download).
+- Filtro de privacidade aplicado na exportacao: evidencias privadas nao sao incluidas no payload exportado.
+
 ## Fase 5: i18n PT-BR/EN-US
 
 - Expandir cobertura de traducoes para UI principal.

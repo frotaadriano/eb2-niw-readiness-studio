@@ -3,6 +3,7 @@ import json
 import os
 import sqlite3
 from abc import ABC, abstractmethod
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -138,6 +139,16 @@ ROADMAP_HORIZON_OPTIONS = ["0_30", "30_90", "3_6", "6_12"]
 ROADMAP_STATUS_OPTIONS = ["backlog", "in_progress", "completed", "blocked"]
 ROADMAP_PRIORITY_OPTIONS = ["low", "medium", "high", "critical"]
 
+ENDEAVOR_STATUS_OPTIONS = ["draft", "in_review", "ready"]
+AUTHORITY_STATUS_OPTIONS = ["planned", "in_progress", "active", "recognized"]
+GITHUB_PROJECT_STATUS_OPTIONS = ["idea", "building", "published", "maintenance"]
+LINKEDIN_CONTENT_TYPE_OPTIONS = ["short_post", "article", "carousel", "tutorial", "case_study", "technical_reflection"]
+LINKEDIN_CONTENT_STATUS_OPTIONS = ["draft", "planned", "published"]
+LINKEDIN_CONTENT_OBJECTIVE_OPTIONS = ["authority", "community", "education", "portfolio", "networking"]
+RECOMMENDER_STRENGTH_OPTIONS = ["low", "medium", "high"]
+RECOMMENDER_INDEPENDENCE_OPTIONS = ["independent", "partially_independent", "direct_manager", "peer"]
+RECOMMENDER_STATUS_OPTIONS = ["prospect", "contacted", "confirmed", "declined"]
+
 def load_locale(locale: str) -> dict[str, str]:
     locale_path = BASE_DIR / "locales" / f"{locale}.json"
     fallback_path = BASE_DIR / "locales" / f"{DEFAULT_LOCALE}.json"
@@ -268,51 +279,127 @@ def _seed_initial_data(conn: sqlite3.Connection) -> None:
         roadmap_tasks,
     )
 
+    default_endeavor = (
+        "Arquiteturas seguras e governadas de agentes de IA generativa",
+        "Desenvolvimento e disseminacao de arquiteturas seguras, governadas e escalaveis de agentes de IA generativa para acelerar a transformacao digital de empresas, aumentar produtividade, reduzir riscos operacionais e melhorar a adocao responsavel de IA em setores estrategicos.",
+        "Apoiar a adocao responsavel de IA em ambientes corporativos e setores estrategicos por meio de boas praticas tecnicas replicaveis.",
+        "arquitetura de agentes de IA generativa",
+        "Aceleracao de transformacao digital com governanca e seguranca para agentes de IA generativa.",
+        "Desenvolvimento e disseminacao de arquiteturas seguras, governadas e escalaveis de agentes de IA generativa para acelerar a transformacao digital de empresas, aumentar produtividade, reduzir riscos operacionais e melhorar a adocao responsavel de IA em setores estrategicos.",
+        "ready",
+    )
     cursor.execute(
         """
-        INSERT OR IGNORE INTO proposed_endeavor (title, summary, impact)
-        VALUES (?, ?, ?)
+        INSERT OR IGNORE INTO proposed_endeavor
+        (title, summary, impact, area, short_version, long_version, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        default_endeavor,
+    )
+
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO github_projects
+        (name, summary, solved_problem, technologies, repo_url, status, potential_impact, generated_evidence, related_articles, related_criteria, stars)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
-            "AI Readiness and Knowledge Transfer for SMBs",
-            "Fake demo endeavor focused on practical AI adoption and workforce enablement.",
-            "Fake demo impact: improve productivity and public technical dissemination.",
+            "EB2-NIW Readiness Studio",
+            "Ferramenta local-first para auto-organizacao de evidencias, gaps e roadmap de prontidao EB-2/NIW.",
+            "Baixa rastreabilidade de evidencias e lacunas para planejamento tecnico-profissional.",
+            "Python, Flask, SQLite, i18n PT-BR/EN-US",
+            "https://github.com/demo/eb2-niw-readiness-studio",
+            "published",
+            "Organizacao disciplinada de evidencias e melhoria da narrativa tecnica publica.",
+            "Arquitetura documentada, testes criticos, roteiro de evolucao e compliance de privacidade.",
+            "Como construir um tracker local-first para prontidao profissional",
+            "assessment.category.public_projects",
+            42,
         ),
     )
 
     cursor.execute(
         """
-        INSERT OR IGNORE INTO github_projects (name, repo_url, summary, stars)
-        VALUES (?, ?, ?, ?)
+        INSERT OR IGNORE INTO authority_plan
+        (channel, objective, cadence, status, main_theme, target_communities, planned_articles, planned_talks, planned_github_repos, events, people_recommenders, public_evidence)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
-            "niw-readiness-demo",
-            "https://github.com/demo/niw-readiness-demo",
-            "Fake portfolio project showing local-first evidence organization.",
-            42,
+            "LinkedIn + GitHub + Comunidades tecnicas",
+            "Consolidar autoridade tecnica em IA generativa aplicada com foco em governanca, seguranca e impacto.",
+            "quinzenal",
+            "planned",
+            "Arquiteturas governadas para agentes de IA generativa",
+            "Comunidades de arquitetura, engenharia de dados e lideranca tecnica",
+            "Serie sobre governanca de IA, observabilidade e seguranca",
+            "Talks em meetups e eventos tecnicos",
+            "Demos locais-first para organizacao de evidencias",
+            "Meetups de engenharia e AI Summit comunitario",
+            "Mentores tecnicos e lideres de times parceiros",
+            "Repositorios publicos, artigos, talks e estudos de caso sinteticos",
         ),
     )
 
     linkedin_ideas = [
         (
-            "From Local-First to Reliable AI Workflows",
-            "Explain why local-first architecture helps privacy and reproducibility.",
+            "Como organizar um roadmap tecnico para fortalecer um perfil EB-2/NIW",
+            "Tema base para roadmap tecnico com foco em evidencia publica.",
         ),
         (
-            "How I Documented NIW Evidence with Software Engineering",
-            "Share a framework to map evidence to measurable impact and authority.",
+            "Por que evidencias publicas importam para profissionais de tecnologia",
+            "Conectar autoridade tecnica e impacto comprovavel.",
         ),
         (
-            "Pragmatic Career Roadmaps for Technical Leadership",
-            "Present a weekly execution model to build authority and public artifacts.",
+            "Construindo uma ferramenta local-first com Python, SQLite e IA plugavel",
+            "Arquitetura pragmatica para dados sensiveis em ambientes locais.",
+        ),
+        (
+            "Como agentes de IA podem apoiar assessments profissionais sem substituir especialistas",
+            "Explicar limites e uso responsavel de IA em contexto educacional.",
+        ),
+        (
+            "OpenAI, Azure OpenAI e Ollama: criando uma arquitetura simples de providers plugaveis",
+            "Comparativo de contrato unico para providers de IA.",
+        ),
+        (
+            "De arquiteto de solucoes a autoridade tecnica: como transformar experiencia em evidencia publica",
+            "Narrativa de carreira com artefatos verificaveis.",
+        ),
+        (
+            "Como documentar impacto tecnico em projetos corporativos de IA generativa",
+            "Template de impacto para portfolio tecnico.",
+        ),
+        (
+            "O que aprendi criando um readiness tracker para carreira internacional",
+            "Licoes tecnicas e de produto do projeto.",
         ),
     ]
     cursor.executemany(
         """
-        INSERT OR IGNORE INTO linkedin_content (title, idea)
-        VALUES (?, ?)
+        INSERT OR IGNORE INTO linkedin_content (title, idea, content_type, status, objective)
+        VALUES (?, ?, 'short_post', 'planned', 'authority')
         """,
         linkedin_ideas,
+    )
+
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO recommenders
+        (name, relationship, organization, role_title, email, letter_strength, independence, validation_area, status, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            "Recomendador Demo",
+            "Mentoria tecnica",
+            "Empresa Exemplo",
+            "Gerente de Engenharia",
+            "",
+            "medium",
+            "independent",
+            "Lideranca tecnica e impacto em IA aplicada",
+            "prospect",
+            "Contato ficticio para demonstracao. Nao usar dados reais em repositorio publico.",
+        ),
     )
 
 
@@ -433,6 +520,17 @@ def init_db(db_path: str = DEFAULT_DB_PATH) -> None:
                 title TEXT NOT NULL UNIQUE,
                 summary TEXT NOT NULL,
                 impact TEXT,
+                area TEXT,
+                problem_to_solve TEXT,
+                impacted_sector TEXT,
+                technologies TEXT,
+                relevance TEXT,
+                experience_evidence TEXT,
+                expected_impact TEXT,
+                broader_importance TEXT,
+                short_version TEXT,
+                long_version TEXT,
+                status TEXT NOT NULL DEFAULT 'draft',
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
             """
@@ -444,7 +542,15 @@ def init_db(db_path: str = DEFAULT_DB_PATH) -> None:
                 channel TEXT NOT NULL,
                 objective TEXT NOT NULL,
                 cadence TEXT,
-                status TEXT NOT NULL DEFAULT 'planned'
+                status TEXT NOT NULL DEFAULT 'planned',
+                main_theme TEXT,
+                target_communities TEXT,
+                planned_articles TEXT,
+                planned_talks TEXT,
+                planned_github_repos TEXT,
+                events TEXT,
+                people_recommenders TEXT,
+                public_evidence TEXT
             )
             """
         )
@@ -455,6 +561,13 @@ def init_db(db_path: str = DEFAULT_DB_PATH) -> None:
                 name TEXT NOT NULL UNIQUE,
                 repo_url TEXT,
                 summary TEXT,
+                solved_problem TEXT,
+                technologies TEXT,
+                status TEXT NOT NULL DEFAULT 'idea',
+                potential_impact TEXT,
+                generated_evidence TEXT,
+                related_articles TEXT,
+                related_criteria TEXT,
                 stars INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
@@ -467,6 +580,12 @@ def init_db(db_path: str = DEFAULT_DB_PATH) -> None:
                 title TEXT NOT NULL UNIQUE,
                 idea TEXT NOT NULL,
                 status TEXT NOT NULL DEFAULT 'draft',
+                content_type TEXT NOT NULL DEFAULT 'short_post',
+                theme TEXT,
+                planned_date TEXT,
+                published_link TEXT,
+                related_evidence TEXT,
+                objective TEXT NOT NULL DEFAULT 'authority',
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
             """
@@ -478,7 +597,13 @@ def init_db(db_path: str = DEFAULT_DB_PATH) -> None:
                 name TEXT NOT NULL,
                 relationship TEXT,
                 status TEXT NOT NULL DEFAULT 'prospect',
-                notes TEXT
+                notes TEXT,
+                organization TEXT,
+                role_title TEXT,
+                email TEXT,
+                letter_strength TEXT NOT NULL DEFAULT 'medium',
+                independence TEXT NOT NULL DEFAULT 'independent',
+                validation_area TEXT
             )
             """
         )
@@ -525,6 +650,49 @@ def init_db(db_path: str = DEFAULT_DB_PATH) -> None:
         _ensure_column(conn, "evidences", "status", "TEXT NOT NULL DEFAULT 'coletar'")
         _ensure_column(conn, "evidences", "notes", "TEXT")
         _ensure_column(conn, "evidences", "can_send_to_ai", "INTEGER NOT NULL DEFAULT 0")
+
+        _ensure_column(conn, "proposed_endeavor", "area", "TEXT")
+        _ensure_column(conn, "proposed_endeavor", "problem_to_solve", "TEXT")
+        _ensure_column(conn, "proposed_endeavor", "impacted_sector", "TEXT")
+        _ensure_column(conn, "proposed_endeavor", "technologies", "TEXT")
+        _ensure_column(conn, "proposed_endeavor", "relevance", "TEXT")
+        _ensure_column(conn, "proposed_endeavor", "experience_evidence", "TEXT")
+        _ensure_column(conn, "proposed_endeavor", "expected_impact", "TEXT")
+        _ensure_column(conn, "proposed_endeavor", "broader_importance", "TEXT")
+        _ensure_column(conn, "proposed_endeavor", "short_version", "TEXT")
+        _ensure_column(conn, "proposed_endeavor", "long_version", "TEXT")
+        _ensure_column(conn, "proposed_endeavor", "status", "TEXT NOT NULL DEFAULT 'draft'")
+
+        _ensure_column(conn, "authority_plan", "main_theme", "TEXT")
+        _ensure_column(conn, "authority_plan", "target_communities", "TEXT")
+        _ensure_column(conn, "authority_plan", "planned_articles", "TEXT")
+        _ensure_column(conn, "authority_plan", "planned_talks", "TEXT")
+        _ensure_column(conn, "authority_plan", "planned_github_repos", "TEXT")
+        _ensure_column(conn, "authority_plan", "events", "TEXT")
+        _ensure_column(conn, "authority_plan", "people_recommenders", "TEXT")
+        _ensure_column(conn, "authority_plan", "public_evidence", "TEXT")
+
+        _ensure_column(conn, "github_projects", "solved_problem", "TEXT")
+        _ensure_column(conn, "github_projects", "technologies", "TEXT")
+        _ensure_column(conn, "github_projects", "status", "TEXT NOT NULL DEFAULT 'idea'")
+        _ensure_column(conn, "github_projects", "potential_impact", "TEXT")
+        _ensure_column(conn, "github_projects", "generated_evidence", "TEXT")
+        _ensure_column(conn, "github_projects", "related_articles", "TEXT")
+        _ensure_column(conn, "github_projects", "related_criteria", "TEXT")
+
+        _ensure_column(conn, "linkedin_content", "content_type", "TEXT NOT NULL DEFAULT 'short_post'")
+        _ensure_column(conn, "linkedin_content", "theme", "TEXT")
+        _ensure_column(conn, "linkedin_content", "planned_date", "TEXT")
+        _ensure_column(conn, "linkedin_content", "published_link", "TEXT")
+        _ensure_column(conn, "linkedin_content", "related_evidence", "TEXT")
+        _ensure_column(conn, "linkedin_content", "objective", "TEXT NOT NULL DEFAULT 'authority'")
+
+        _ensure_column(conn, "recommenders", "organization", "TEXT")
+        _ensure_column(conn, "recommenders", "role_title", "TEXT")
+        _ensure_column(conn, "recommenders", "email", "TEXT")
+        _ensure_column(conn, "recommenders", "letter_strength", "TEXT NOT NULL DEFAULT 'medium'")
+        _ensure_column(conn, "recommenders", "independence", "TEXT NOT NULL DEFAULT 'independent'")
+        _ensure_column(conn, "recommenders", "validation_area", "TEXT")
 
         _seed_initial_data(conn)
         conn.commit()
@@ -877,7 +1045,12 @@ def create_app() -> Flask:
                             .badge.pronto,
                             .badge.completed,
                             .badge.done,
-                            .badge.low {
+                            .badge.low,
+                            .badge.ready,
+                            .badge.active,
+                            .badge.recognized,
+                            .badge.published,
+                            .badge.confirmed {
                                 background: #eaf8ee;
                                 border-color: #2f8f4b;
                                 color: #1f6a35;
@@ -889,7 +1062,14 @@ def create_app() -> Flask:
                             .badge.em_revisao,
                             .badge.in_progress,
                             .badge.backlog,
-                            .badge.medium {
+                            .badge.medium,
+                            .badge.in_review,
+                            .badge.planned,
+                            .badge.building,
+                            .badge.maintenance,
+                            .badge.contacted,
+                            .badge.partially_independent,
+                            .badge.peer {
                                 background: #fff5e8;
                                 border-color: #c9791c;
                                 color: #8b4a00;
@@ -902,7 +1082,11 @@ def create_app() -> Flask:
                             .badge.descartado,
                             .badge.blocked,
                             .badge.high,
-                            .badge.critical {
+                            .badge.critical,
+                            .badge.idea,
+                            .badge.prospect,
+                            .badge.declined,
+                            .badge.direct_manager {
                                 background: #fdeced;
                                 border-color: #c73d3d;
                                 color: #8f1f28;
@@ -927,6 +1111,12 @@ def create_app() -> Flask:
                 <a href="{{ url_for('evidences', lang=lang) }}">{{ t('nav.evidences', lang) }}</a>
                 <a href="{{ url_for('roadmap', lang=lang) }}">{{ t('nav.roadmap', lang) }}</a>
                 <a href="{{ url_for('gaps', lang=lang) }}">{{ t('nav.gaps', lang) }}</a>
+                <a href="{{ url_for('proposed_endeavor', lang=lang) }}">{{ t('nav.proposed_endeavor', lang) }}</a>
+                <a href="{{ url_for('authority', lang=lang) }}">{{ t('nav.authority', lang) }}</a>
+                <a href="{{ url_for('github_projects', lang=lang) }}">{{ t('nav.github_projects', lang) }}</a>
+                <a href="{{ url_for('linkedin_content', lang=lang) }}">{{ t('nav.linkedin_content', lang) }}</a>
+                <a href="{{ url_for('recommenders', lang=lang) }}">{{ t('nav.recommenders', lang) }}</a>
+                <a href="{{ url_for('export_report', lang=lang) }}">{{ t('nav.export_report', lang) }}</a>
                 <a href="{{ url_for('settings', lang=lang) }}">{{ t('nav.settings', lang) }}</a>
                 <a href="{{ url_for('about', lang=lang) }}">{{ t('nav.about', lang) }}</a>
                 <span class="small language">{{ t('settings.current_language', lang) }}: {{ lang }}</span>
@@ -1524,6 +1714,797 @@ def create_app() -> Flask:
             status_options=ROADMAP_STATUS_OPTIONS,
         )
 
+    def fetch_proposed_endeavors() -> list[dict[str, Any]]:
+        conn = get_db()
+        rows = conn.execute(
+            """
+            SELECT
+                id,
+                area,
+                problem_to_solve,
+                impacted_sector,
+                technologies,
+                relevance,
+                experience_evidence,
+                expected_impact,
+                broader_importance,
+                short_version,
+                long_version,
+                status
+            FROM proposed_endeavor
+            ORDER BY id DESC
+            """
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    def fetch_proposed_endeavor_by_id(item_id: int) -> dict[str, Any] | None:
+        conn = get_db()
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                area,
+                problem_to_solve,
+                impacted_sector,
+                technologies,
+                relevance,
+                experience_evidence,
+                expected_impact,
+                broader_importance,
+                short_version,
+                long_version,
+                status
+            FROM proposed_endeavor
+            WHERE id = ?
+            """,
+            (item_id,),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def upsert_proposed_endeavor(item_id: int | None, form_data: dict[str, str]) -> None:
+        conn = get_db()
+        payload = {
+            "area": form_data.get("area", "").strip(),
+            "problem_to_solve": form_data.get("problem_to_solve", "").strip(),
+            "impacted_sector": form_data.get("impacted_sector", "").strip(),
+            "technologies": form_data.get("technologies", "").strip(),
+            "relevance": form_data.get("relevance", "").strip(),
+            "experience_evidence": form_data.get("experience_evidence", "").strip(),
+            "expected_impact": form_data.get("expected_impact", "").strip(),
+            "broader_importance": form_data.get("broader_importance", "").strip(),
+            "short_version": form_data.get("short_version", "").strip(),
+            "long_version": form_data.get("long_version", "").strip(),
+            "status": form_data.get("status", "draft").strip() or "draft",
+        }
+        if payload["status"] not in ENDEAVOR_STATUS_OPTIONS:
+            payload["status"] = "draft"
+
+        title = payload["short_version"][:180] or payload["area"][:180] or "Proposed endeavor"
+        summary = payload["long_version"] or payload["short_version"]
+        impact = payload["expected_impact"]
+
+        if item_id is None:
+            conn.execute(
+                """
+                INSERT INTO proposed_endeavor
+                (title, summary, impact, area, problem_to_solve, impacted_sector, technologies, relevance, experience_evidence, expected_impact, broader_importance, short_version, long_version, status)
+                VALUES (:title, :summary, :impact, :area, :problem_to_solve, :impacted_sector, :technologies, :relevance, :experience_evidence, :expected_impact, :broader_importance, :short_version, :long_version, :status)
+                """,
+                {**payload, "title": title, "summary": summary, "impact": impact},
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE proposed_endeavor
+                SET title = :title,
+                    summary = :summary,
+                    impact = :impact,
+                    area = :area,
+                    problem_to_solve = :problem_to_solve,
+                    impacted_sector = :impacted_sector,
+                    technologies = :technologies,
+                    relevance = :relevance,
+                    experience_evidence = :experience_evidence,
+                    expected_impact = :expected_impact,
+                    broader_importance = :broader_importance,
+                    short_version = :short_version,
+                    long_version = :long_version,
+                    status = :status
+                WHERE id = :id
+                """,
+                {
+                    **payload,
+                    "id": item_id,
+                    "title": title,
+                    "summary": summary,
+                    "impact": impact,
+                },
+            )
+        conn.commit()
+
+    def delete_proposed_endeavor(item_id: int) -> None:
+        conn = get_db()
+        conn.execute("DELETE FROM proposed_endeavor WHERE id = ?", (item_id,))
+        conn.commit()
+
+    def fetch_authority_items() -> list[dict[str, Any]]:
+        conn = get_db()
+        rows = conn.execute(
+            """
+            SELECT
+                id,
+                main_theme,
+                target_communities,
+                planned_articles,
+                planned_talks,
+                planned_github_repos,
+                events,
+                people_recommenders,
+                public_evidence,
+                status
+            FROM authority_plan
+            ORDER BY id DESC
+            """
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    def fetch_authority_item_by_id(item_id: int) -> dict[str, Any] | None:
+        conn = get_db()
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                main_theme,
+                target_communities,
+                planned_articles,
+                planned_talks,
+                planned_github_repos,
+                events,
+                people_recommenders,
+                public_evidence,
+                status
+            FROM authority_plan
+            WHERE id = ?
+            """,
+            (item_id,),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def upsert_authority_item(item_id: int | None, form_data: dict[str, str]) -> None:
+        conn = get_db()
+        payload = {
+            "main_theme": form_data.get("main_theme", "").strip(),
+            "target_communities": form_data.get("target_communities", "").strip(),
+            "planned_articles": form_data.get("planned_articles", "").strip(),
+            "planned_talks": form_data.get("planned_talks", "").strip(),
+            "planned_github_repos": form_data.get("planned_github_repos", "").strip(),
+            "events": form_data.get("events", "").strip(),
+            "people_recommenders": form_data.get("people_recommenders", "").strip(),
+            "public_evidence": form_data.get("public_evidence", "").strip(),
+            "status": form_data.get("status", "planned").strip() or "planned",
+        }
+        if payload["status"] not in AUTHORITY_STATUS_OPTIONS:
+            payload["status"] = "planned"
+
+        channel = payload["target_communities"] or "Comunidades tecnicas"
+        objective = payload["main_theme"] or "Plano de autoridade tecnica"
+        cadence = "cadencia flexivel"
+
+        if item_id is None:
+            conn.execute(
+                """
+                INSERT INTO authority_plan
+                (channel, objective, cadence, status, main_theme, target_communities, planned_articles, planned_talks, planned_github_repos, events, people_recommenders, public_evidence)
+                VALUES (:channel, :objective, :cadence, :status, :main_theme, :target_communities, :planned_articles, :planned_talks, :planned_github_repos, :events, :people_recommenders, :public_evidence)
+                """,
+                {
+                    **payload,
+                    "channel": channel,
+                    "objective": objective,
+                    "cadence": cadence,
+                },
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE authority_plan
+                SET channel = :channel,
+                    objective = :objective,
+                    cadence = :cadence,
+                    status = :status,
+                    main_theme = :main_theme,
+                    target_communities = :target_communities,
+                    planned_articles = :planned_articles,
+                    planned_talks = :planned_talks,
+                    planned_github_repos = :planned_github_repos,
+                    events = :events,
+                    people_recommenders = :people_recommenders,
+                    public_evidence = :public_evidence
+                WHERE id = :id
+                """,
+                {
+                    **payload,
+                    "id": item_id,
+                    "channel": channel,
+                    "objective": objective,
+                    "cadence": cadence,
+                },
+            )
+        conn.commit()
+
+    def delete_authority_item(item_id: int) -> None:
+        conn = get_db()
+        conn.execute("DELETE FROM authority_plan WHERE id = ?", (item_id,))
+        conn.commit()
+
+    def fetch_github_projects() -> list[dict[str, Any]]:
+        conn = get_db()
+        rows = conn.execute(
+            """
+            SELECT
+                id,
+                name,
+                summary,
+                solved_problem,
+                technologies,
+                repo_url,
+                status,
+                potential_impact,
+                generated_evidence,
+                related_articles,
+                related_criteria
+            FROM github_projects
+            ORDER BY id DESC
+            """
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    def fetch_github_project_by_id(item_id: int) -> dict[str, Any] | None:
+        conn = get_db()
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                name,
+                summary,
+                solved_problem,
+                technologies,
+                repo_url,
+                status,
+                potential_impact,
+                generated_evidence,
+                related_articles,
+                related_criteria
+            FROM github_projects
+            WHERE id = ?
+            """,
+            (item_id,),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def upsert_github_project(item_id: int | None, form_data: dict[str, str]) -> None:
+        conn = get_db()
+        payload = {
+            "name": form_data.get("name", "").strip(),
+            "summary": form_data.get("summary", "").strip(),
+            "solved_problem": form_data.get("solved_problem", "").strip(),
+            "technologies": form_data.get("technologies", "").strip(),
+            "repo_url": form_data.get("repo_url", "").strip(),
+            "status": form_data.get("status", "idea").strip() or "idea",
+            "potential_impact": form_data.get("potential_impact", "").strip(),
+            "generated_evidence": form_data.get("generated_evidence", "").strip(),
+            "related_articles": form_data.get("related_articles", "").strip(),
+            "related_criteria": form_data.get("related_criteria", "").strip(),
+        }
+        if payload["status"] not in GITHUB_PROJECT_STATUS_OPTIONS:
+            payload["status"] = "idea"
+
+        if item_id is None:
+            conn.execute(
+                """
+                INSERT INTO github_projects
+                (name, summary, solved_problem, technologies, repo_url, status, potential_impact, generated_evidence, related_articles, related_criteria)
+                VALUES (:name, :summary, :solved_problem, :technologies, :repo_url, :status, :potential_impact, :generated_evidence, :related_articles, :related_criteria)
+                """,
+                payload,
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE github_projects
+                SET name = :name,
+                    summary = :summary,
+                    solved_problem = :solved_problem,
+                    technologies = :technologies,
+                    repo_url = :repo_url,
+                    status = :status,
+                    potential_impact = :potential_impact,
+                    generated_evidence = :generated_evidence,
+                    related_articles = :related_articles,
+                    related_criteria = :related_criteria
+                WHERE id = :id
+                """,
+                {**payload, "id": item_id},
+            )
+        conn.commit()
+
+    def delete_github_project(item_id: int) -> None:
+        conn = get_db()
+        conn.execute("DELETE FROM github_projects WHERE id = ?", (item_id,))
+        conn.commit()
+
+    def fetch_linkedin_contents() -> list[dict[str, Any]]:
+        conn = get_db()
+        rows = conn.execute(
+            """
+            SELECT
+                id,
+                title,
+                content_type,
+                theme,
+                status,
+                planned_date,
+                published_link,
+                related_evidence,
+                objective
+            FROM linkedin_content
+            ORDER BY id DESC
+            """
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    def fetch_linkedin_content_by_id(item_id: int) -> dict[str, Any] | None:
+        conn = get_db()
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                title,
+                content_type,
+                theme,
+                status,
+                planned_date,
+                published_link,
+                related_evidence,
+                objective
+            FROM linkedin_content
+            WHERE id = ?
+            """,
+            (item_id,),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def upsert_linkedin_content(item_id: int | None, form_data: dict[str, str]) -> None:
+        conn = get_db()
+        payload = {
+            "title": form_data.get("title", "").strip(),
+            "content_type": form_data.get("content_type", "short_post").strip() or "short_post",
+            "theme": form_data.get("theme", "").strip(),
+            "status": form_data.get("status", "draft").strip() or "draft",
+            "planned_date": form_data.get("planned_date", "").strip(),
+            "published_link": form_data.get("published_link", "").strip(),
+            "related_evidence": form_data.get("related_evidence", "").strip(),
+            "objective": form_data.get("objective", "authority").strip() or "authority",
+        }
+        if payload["content_type"] not in LINKEDIN_CONTENT_TYPE_OPTIONS:
+            payload["content_type"] = "short_post"
+        if payload["status"] not in LINKEDIN_CONTENT_STATUS_OPTIONS:
+            payload["status"] = "draft"
+        if payload["objective"] not in LINKEDIN_CONTENT_OBJECTIVE_OPTIONS:
+            payload["objective"] = "authority"
+
+        idea = payload["theme"] or payload["title"]
+        if item_id is None:
+            conn.execute(
+                """
+                INSERT INTO linkedin_content
+                (title, idea, content_type, theme, status, planned_date, published_link, related_evidence, objective)
+                VALUES (:title, :idea, :content_type, :theme, :status, :planned_date, :published_link, :related_evidence, :objective)
+                """,
+                {**payload, "idea": idea},
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE linkedin_content
+                SET title = :title,
+                    idea = :idea,
+                    content_type = :content_type,
+                    theme = :theme,
+                    status = :status,
+                    planned_date = :planned_date,
+                    published_link = :published_link,
+                    related_evidence = :related_evidence,
+                    objective = :objective
+                WHERE id = :id
+                """,
+                {**payload, "id": item_id, "idea": idea},
+            )
+        conn.commit()
+
+    def delete_linkedin_content(item_id: int) -> None:
+        conn = get_db()
+        conn.execute("DELETE FROM linkedin_content WHERE id = ?", (item_id,))
+        conn.commit()
+
+    def fetch_recommenders() -> list[dict[str, Any]]:
+        conn = get_db()
+        rows = conn.execute(
+            """
+            SELECT
+                id,
+                name,
+                relationship,
+                organization,
+                role_title,
+                email,
+                letter_strength,
+                independence,
+                validation_area,
+                status,
+                notes
+            FROM recommenders
+            ORDER BY id DESC
+            """
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    def fetch_recommender_by_id(item_id: int) -> dict[str, Any] | None:
+        conn = get_db()
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                name,
+                relationship,
+                organization,
+                role_title,
+                email,
+                letter_strength,
+                independence,
+                validation_area,
+                status,
+                notes
+            FROM recommenders
+            WHERE id = ?
+            """,
+            (item_id,),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def upsert_recommender(item_id: int | None, form_data: dict[str, str]) -> None:
+        conn = get_db()
+        payload = {
+            "name": form_data.get("name", "").strip(),
+            "relationship": form_data.get("relationship", "").strip(),
+            "organization": form_data.get("organization", "").strip(),
+            "role_title": form_data.get("role_title", "").strip(),
+            "email": form_data.get("email", "").strip(),
+            "letter_strength": form_data.get("letter_strength", "medium").strip() or "medium",
+            "independence": form_data.get("independence", "independent").strip() or "independent",
+            "validation_area": form_data.get("validation_area", "").strip(),
+            "status": form_data.get("status", "prospect").strip() or "prospect",
+            "notes": form_data.get("notes", "").strip(),
+        }
+        if payload["letter_strength"] not in RECOMMENDER_STRENGTH_OPTIONS:
+            payload["letter_strength"] = "medium"
+        if payload["independence"] not in RECOMMENDER_INDEPENDENCE_OPTIONS:
+            payload["independence"] = "independent"
+        if payload["status"] not in RECOMMENDER_STATUS_OPTIONS:
+            payload["status"] = "prospect"
+
+        if item_id is None:
+            conn.execute(
+                """
+                INSERT INTO recommenders
+                (name, relationship, organization, role_title, email, letter_strength, independence, validation_area, status, notes)
+                VALUES (:name, :relationship, :organization, :role_title, :email, :letter_strength, :independence, :validation_area, :status, :notes)
+                """,
+                payload,
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE recommenders
+                SET name = :name,
+                    relationship = :relationship,
+                    organization = :organization,
+                    role_title = :role_title,
+                    email = :email,
+                    letter_strength = :letter_strength,
+                    independence = :independence,
+                    validation_area = :validation_area,
+                    status = :status,
+                    notes = :notes
+                WHERE id = :id
+                """,
+                {**payload, "id": item_id},
+            )
+        conn.commit()
+
+    def delete_recommender(item_id: int) -> None:
+        conn = get_db()
+        conn.execute("DELETE FROM recommenders WHERE id = ?", (item_id,))
+        conn.commit()
+
+    def render_proposed_endeavor_form(lang: str, data: dict[str, Any]) -> str:
+        form_template = """
+        <label>{{ t('proposed.field.area', lang) }}
+            <input type="text" name="area" value="{{ data.area }}" required />
+        </label>
+        <label>{{ t('proposed.field.problem_to_solve', lang) }}
+            <textarea name="problem_to_solve" rows="2">{{ data.problem_to_solve }}</textarea>
+        </label>
+        <label>{{ t('proposed.field.impacted_sector', lang) }}
+            <input type="text" name="impacted_sector" value="{{ data.impacted_sector }}" />
+        </label>
+        <label>{{ t('proposed.field.technologies', lang) }}
+            <input type="text" name="technologies" value="{{ data.technologies }}" />
+        </label>
+        <label>{{ t('proposed.field.relevance', lang) }}
+            <textarea name="relevance" rows="2">{{ data.relevance }}</textarea>
+        </label>
+        <label>{{ t('proposed.field.experience_evidence', lang) }}
+            <textarea name="experience_evidence" rows="2">{{ data.experience_evidence }}</textarea>
+        </label>
+        <label>{{ t('proposed.field.expected_impact', lang) }}
+            <textarea name="expected_impact" rows="2">{{ data.expected_impact }}</textarea>
+        </label>
+        <label>{{ t('proposed.field.broader_importance', lang) }}
+            <textarea name="broader_importance" rows="2">{{ data.broader_importance }}</textarea>
+        </label>
+        <label>{{ t('proposed.field.short_version', lang) }}
+            <textarea name="short_version" rows="2">{{ data.short_version }}</textarea>
+        </label>
+        <label>{{ t('proposed.field.long_version', lang) }}
+            <textarea name="long_version" rows="4">{{ data.long_version }}</textarea>
+        </label>
+        <label>{{ t('proposed.field.status', lang) }}
+            <select name="status">
+                {% for opt in status_options %}
+                    <option value="{{ opt }}" {% if data.status == opt %}selected{% endif %}>{{ t('status.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        """
+        return render_template_string(form_template, lang=lang, t=t, data=data, status_options=ENDEAVOR_STATUS_OPTIONS)
+
+    def render_authority_form(lang: str, data: dict[str, Any]) -> str:
+        form_template = """
+        <label>{{ t('authority.field.main_theme', lang) }}
+            <input type="text" name="main_theme" value="{{ data.main_theme }}" required />
+        </label>
+        <label>{{ t('authority.field.target_communities', lang) }}
+            <textarea name="target_communities" rows="2">{{ data.target_communities }}</textarea>
+        </label>
+        <label>{{ t('authority.field.planned_articles', lang) }}
+            <textarea name="planned_articles" rows="2">{{ data.planned_articles }}</textarea>
+        </label>
+        <label>{{ t('authority.field.planned_talks', lang) }}
+            <textarea name="planned_talks" rows="2">{{ data.planned_talks }}</textarea>
+        </label>
+        <label>{{ t('authority.field.planned_github_repos', lang) }}
+            <textarea name="planned_github_repos" rows="2">{{ data.planned_github_repos }}</textarea>
+        </label>
+        <label>{{ t('authority.field.events', lang) }}
+            <textarea name="events" rows="2">{{ data.events }}</textarea>
+        </label>
+        <label>{{ t('authority.field.people_recommenders', lang) }}
+            <textarea name="people_recommenders" rows="2">{{ data.people_recommenders }}</textarea>
+        </label>
+        <label>{{ t('authority.field.public_evidence', lang) }}
+            <textarea name="public_evidence" rows="2">{{ data.public_evidence }}</textarea>
+        </label>
+        <label>{{ t('authority.field.status', lang) }}
+            <select name="status">
+                {% for opt in status_options %}
+                    <option value="{{ opt }}" {% if data.status == opt %}selected{% endif %}>{{ t('status.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        """
+        return render_template_string(form_template, lang=lang, t=t, data=data, status_options=AUTHORITY_STATUS_OPTIONS)
+
+    def render_github_project_form(lang: str, data: dict[str, Any]) -> str:
+        form_template = """
+        <label>{{ t('github.field.name', lang) }}
+            <input type="text" name="name" value="{{ data.name }}" required />
+        </label>
+        <label>{{ t('github.field.summary', lang) }}
+            <textarea name="summary" rows="2">{{ data.summary }}</textarea>
+        </label>
+        <label>{{ t('github.field.solved_problem', lang) }}
+            <textarea name="solved_problem" rows="2">{{ data.solved_problem }}</textarea>
+        </label>
+        <label>{{ t('github.field.technologies', lang) }}
+            <input type="text" name="technologies" value="{{ data.technologies }}" />
+        </label>
+        <label>{{ t('github.field.repo_url', lang) }}
+            <input type="text" name="repo_url" value="{{ data.repo_url }}" />
+        </label>
+        <label>{{ t('github.field.status', lang) }}
+            <select name="status">
+                {% for opt in status_options %}
+                    <option value="{{ opt }}" {% if data.status == opt %}selected{% endif %}>{{ t('status.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>{{ t('github.field.potential_impact', lang) }}
+            <textarea name="potential_impact" rows="2">{{ data.potential_impact }}</textarea>
+        </label>
+        <label>{{ t('github.field.generated_evidence', lang) }}
+            <textarea name="generated_evidence" rows="2">{{ data.generated_evidence }}</textarea>
+        </label>
+        <label>{{ t('github.field.related_articles', lang) }}
+            <textarea name="related_articles" rows="2">{{ data.related_articles }}</textarea>
+        </label>
+        <label>{{ t('github.field.related_criteria', lang) }}
+            <input type="text" name="related_criteria" value="{{ data.related_criteria }}" />
+        </label>
+        """
+        return render_template_string(form_template, lang=lang, t=t, data=data, status_options=GITHUB_PROJECT_STATUS_OPTIONS)
+
+    def render_linkedin_content_form(lang: str, data: dict[str, Any]) -> str:
+        form_template = """
+        <label>{{ t('linkedin.field.title', lang) }}
+            <input type="text" name="title" value="{{ data.title }}" required />
+        </label>
+        <label>{{ t('linkedin.field.content_type', lang) }}
+            <select name="content_type">
+                {% for opt in type_options %}
+                    <option value="{{ opt }}" {% if data.content_type == opt %}selected{% endif %}>{{ t('linkedin.type.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>{{ t('linkedin.field.theme', lang) }}
+            <input type="text" name="theme" value="{{ data.theme }}" />
+        </label>
+        <label>{{ t('linkedin.field.status', lang) }}
+            <select name="status">
+                {% for opt in status_options %}
+                    <option value="{{ opt }}" {% if data.status == opt %}selected{% endif %}>{{ t('status.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>{{ t('linkedin.field.planned_date', lang) }}
+            <input type="date" name="planned_date" value="{{ data.planned_date }}" />
+        </label>
+        <label>{{ t('linkedin.field.published_link', lang) }}
+            <input type="text" name="published_link" value="{{ data.published_link }}" />
+        </label>
+        <label>{{ t('linkedin.field.related_evidence', lang) }}
+            <textarea name="related_evidence" rows="2">{{ data.related_evidence }}</textarea>
+        </label>
+        <label>{{ t('linkedin.field.objective', lang) }}
+            <select name="objective">
+                {% for opt in objective_options %}
+                    <option value="{{ opt }}" {% if data.objective == opt %}selected{% endif %}>{{ t('linkedin.objective.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        """
+        return render_template_string(
+            form_template,
+            lang=lang,
+            t=t,
+            data=data,
+            type_options=LINKEDIN_CONTENT_TYPE_OPTIONS,
+            status_options=LINKEDIN_CONTENT_STATUS_OPTIONS,
+            objective_options=LINKEDIN_CONTENT_OBJECTIVE_OPTIONS,
+        )
+
+    def render_recommender_form(lang: str, data: dict[str, Any]) -> str:
+        form_template = """
+        <label>{{ t('recommender.field.name', lang) }}
+            <input type="text" name="name" value="{{ data.name }}" required />
+        </label>
+        <label>{{ t('recommender.field.relationship', lang) }}
+            <input type="text" name="relationship" value="{{ data.relationship }}" />
+        </label>
+        <label>{{ t('recommender.field.organization', lang) }}
+            <input type="text" name="organization" value="{{ data.organization }}" />
+        </label>
+        <label>{{ t('recommender.field.role_title', lang) }}
+            <input type="text" name="role_title" value="{{ data.role_title }}" />
+        </label>
+        <label>{{ t('recommender.field.email', lang) }}
+            <input type="text" name="email" value="{{ data.email }}" />
+        </label>
+        <label>{{ t('recommender.field.letter_strength', lang) }}
+            <select name="letter_strength">
+                {% for opt in strength_options %}
+                    <option value="{{ opt }}" {% if data.letter_strength == opt %}selected{% endif %}>{{ t('strength.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>{{ t('recommender.field.independence', lang) }}
+            <select name="independence">
+                {% for opt in independence_options %}
+                    <option value="{{ opt }}" {% if data.independence == opt %}selected{% endif %}>{{ t('independence.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>{{ t('recommender.field.validation_area', lang) }}
+            <textarea name="validation_area" rows="2">{{ data.validation_area }}</textarea>
+        </label>
+        <label>{{ t('recommender.field.status', lang) }}
+            <select name="status">
+                {% for opt in status_options %}
+                    <option value="{{ opt }}" {% if data.status == opt %}selected{% endif %}>{{ t('status.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>{{ t('recommender.field.notes', lang) }}
+            <textarea name="notes" rows="2">{{ data.notes }}</textarea>
+        </label>
+        """
+        return render_template_string(
+            form_template,
+            lang=lang,
+            t=t,
+            data=data,
+            strength_options=RECOMMENDER_STRENGTH_OPTIONS,
+            independence_options=RECOMMENDER_INDEPENDENCE_OPTIONS,
+            status_options=RECOMMENDER_STATUS_OPTIONS,
+        )
+
+    def build_organizational_report_payload() -> dict[str, Any]:
+        conn = get_db()
+
+        profile_row = conn.execute(
+            """
+            SELECT id, full_name, headline, target_domain, locale, created_at
+            FROM profile
+            ORDER BY id DESC
+            LIMIT 1
+            """
+        ).fetchone()
+        profile = dict(profile_row) if profile_row else {}
+
+        evidence_rows = conn.execute(
+            """
+            SELECT
+                id,
+                title,
+                evidence_type,
+                category,
+                description,
+                link_or_path,
+                evidence_date,
+                relevance,
+                related_criteria,
+                status,
+                notes,
+                can_send_to_ai,
+                is_private
+            FROM evidences
+            ORDER BY COALESCE(evidence_date, '') DESC, id DESC
+            """
+        ).fetchall()
+        evidences = [dict(row) for row in evidence_rows]
+
+        assessment_questions = fetch_assessment_questions_with_answers()
+        eb2_score = calculate_eb2_scores(assessment_questions)
+        niw_assessments = fetch_niw_assessments()
+        niw_average = int(round(sum(item["score"] for item in niw_assessments) / max(1, len(niw_assessments))))
+
+        return {
+            "disclaimer": "Educational and organizational only. Not legal or immigration advice.",
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "profile": profile,
+            "readiness": {
+                "eb2": eb2_score,
+                "niw_average": niw_average,
+                "niw_prongs": niw_assessments,
+            },
+            "proposed_endeavor": fetch_proposed_endeavors(),
+            "authority": fetch_authority_items(),
+            "github_projects": fetch_github_projects(),
+            "linkedin_content": fetch_linkedin_contents(),
+            "recommenders": fetch_recommenders(),
+            "evidences": filter_private_evidences(evidences),
+        }
+
     def build_dashboard_summary() -> dict[str, Any]:
         conn = get_db()
         assessment_questions = fetch_assessment_questions_with_answers()
@@ -2092,6 +3073,503 @@ def create_app() -> Flask:
             items=items,
             locale_keys=set(load_locale(lang).keys()),
         )
+
+    @app.route("/proposed-endeavor")
+    def proposed_endeavor() -> str:
+        lang = get_selected_language()
+        items = fetch_proposed_endeavors()
+        body = """
+        <h1>{{ t('proposed.title', lang) }}</h1>
+        <p>{{ t('proposed.subtitle', lang) }}</p>
+        <a href="{{ url_for('proposed_endeavor_new', lang=lang) }}">{{ t('proposed.new', lang) }}</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('proposed.field.area', lang) }}</th>
+                    <th>{{ t('proposed.field.short_version', lang) }}</th>
+                    <th>{{ t('proposed.field.status', lang) }}</th>
+                    <th>{{ t('common.actions', lang) }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>{{ item.area }}</td>
+                        <td>{{ item.short_version }}</td>
+                        <td><span class="badge {{ item.status }}">{{ t('status.' ~ item.status, lang) }}</span></td>
+                        <td>
+                            <div class="actions">
+                                <a href="{{ url_for('proposed_endeavor_edit', item_id=item.id, lang=lang) }}">{{ t('common.edit', lang) }}</a>
+                                <form method="post" action="{{ url_for('proposed_endeavor_delete', item_id=item.id, lang=lang) }}">
+                                    <button type="submit">{{ t('common.delete', lang) }}</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        """
+        return render_page(lang, t("proposed.title", lang), body, items=items)
+
+    @app.route("/proposed-endeavor/new", methods=["GET", "POST"])
+    def proposed_endeavor_new() -> str:
+        lang = get_selected_language()
+        if request.method == "POST":
+            upsert_proposed_endeavor(None, dict(request.form))
+            return redirect(url_for("proposed_endeavor", lang=lang))
+
+        form_data = {
+            "area": "",
+            "problem_to_solve": "",
+            "impacted_sector": "",
+            "technologies": "",
+            "relevance": "",
+            "experience_evidence": "",
+            "expected_impact": "",
+            "broader_importance": "",
+            "short_version": "Desenvolvimento e disseminacao de arquiteturas seguras, governadas e escalaveis de agentes de IA generativa para acelerar a transformacao digital de empresas, aumentar produtividade, reduzir riscos operacionais e melhorar a adocao responsavel de IA em setores estrategicos.",
+            "long_version": "",
+            "status": "draft",
+        }
+        body = """
+        <h1>{{ t('proposed.new', lang) }}</h1>
+        <form method="post" action="{{ url_for('proposed_endeavor_new', lang=lang) }}">
+            {{ proposed_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(
+            lang,
+            t("proposed.new", lang),
+            body,
+            proposed_form=render_proposed_endeavor_form(lang, form_data),
+        )
+
+    @app.route("/proposed-endeavor/<int:item_id>/edit", methods=["GET", "POST"])
+    def proposed_endeavor_edit(item_id: int) -> str:
+        lang = get_selected_language()
+        item = fetch_proposed_endeavor_by_id(item_id)
+        if not item:
+            return redirect(url_for("proposed_endeavor", lang=lang))
+        if request.method == "POST":
+            upsert_proposed_endeavor(item_id, dict(request.form))
+            return redirect(url_for("proposed_endeavor", lang=lang))
+
+        body = """
+        <h1>{{ t('proposed.edit', lang) }}</h1>
+        <form method="post" action="{{ url_for('proposed_endeavor_edit', item_id=item.id, lang=lang) }}">
+            {{ proposed_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(
+            lang,
+            t("proposed.edit", lang),
+            body,
+            item=item,
+            proposed_form=render_proposed_endeavor_form(lang, item),
+        )
+
+    @app.route("/proposed-endeavor/<int:item_id>/delete", methods=["POST"])
+    def proposed_endeavor_delete(item_id: int) -> Any:
+        lang = get_selected_language()
+        delete_proposed_endeavor(item_id)
+        return redirect(url_for("proposed_endeavor", lang=lang))
+
+    @app.route("/authority")
+    def authority() -> str:
+        lang = get_selected_language()
+        items = fetch_authority_items()
+        body = """
+        <h1>{{ t('authority.title', lang) }}</h1>
+        <p>{{ t('authority.subtitle', lang) }}</p>
+        <div class="disclaimer">{{ t('authority.explanation', lang) }}</div>
+        <a href="{{ url_for('authority_new', lang=lang) }}">{{ t('authority.new', lang) }}</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('authority.field.main_theme', lang) }}</th>
+                    <th>{{ t('authority.field.target_communities', lang) }}</th>
+                    <th>{{ t('authority.field.status', lang) }}</th>
+                    <th>{{ t('common.actions', lang) }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>{{ item.main_theme }}</td>
+                        <td>{{ item.target_communities }}</td>
+                        <td><span class="badge {{ item.status }}">{{ t('status.' ~ item.status, lang) }}</span></td>
+                        <td>
+                            <div class="actions">
+                                <a href="{{ url_for('authority_edit', item_id=item.id, lang=lang) }}">{{ t('common.edit', lang) }}</a>
+                                <form method="post" action="{{ url_for('authority_delete', item_id=item.id, lang=lang) }}">
+                                    <button type="submit">{{ t('common.delete', lang) }}</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        """
+        return render_page(lang, t("authority.title", lang), body, items=items)
+
+    @app.route("/authority/new", methods=["GET", "POST"])
+    def authority_new() -> str:
+        lang = get_selected_language()
+        if request.method == "POST":
+            upsert_authority_item(None, dict(request.form))
+            return redirect(url_for("authority", lang=lang))
+
+        form_data = {
+            "main_theme": "",
+            "target_communities": "",
+            "planned_articles": "",
+            "planned_talks": "",
+            "planned_github_repos": "",
+            "events": "",
+            "people_recommenders": "",
+            "public_evidence": "",
+            "status": "planned",
+        }
+        body = """
+        <h1>{{ t('authority.new', lang) }}</h1>
+        <form method="post" action="{{ url_for('authority_new', lang=lang) }}">
+            {{ authority_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(lang, t("authority.new", lang), body, authority_form=render_authority_form(lang, form_data))
+
+    @app.route("/authority/<int:item_id>/edit", methods=["GET", "POST"])
+    def authority_edit(item_id: int) -> str:
+        lang = get_selected_language()
+        item = fetch_authority_item_by_id(item_id)
+        if not item:
+            return redirect(url_for("authority", lang=lang))
+        if request.method == "POST":
+            upsert_authority_item(item_id, dict(request.form))
+            return redirect(url_for("authority", lang=lang))
+
+        body = """
+        <h1>{{ t('authority.edit', lang) }}</h1>
+        <form method="post" action="{{ url_for('authority_edit', item_id=item.id, lang=lang) }}">
+            {{ authority_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(lang, t("authority.edit", lang), body, item=item, authority_form=render_authority_form(lang, item))
+
+    @app.route("/authority/<int:item_id>/delete", methods=["POST"])
+    def authority_delete(item_id: int) -> Any:
+        lang = get_selected_language()
+        delete_authority_item(item_id)
+        return redirect(url_for("authority", lang=lang))
+
+    @app.route("/github-projects")
+    def github_projects() -> str:
+        lang = get_selected_language()
+        items = fetch_github_projects()
+        body = """
+        <h1>{{ t('github.title', lang) }}</h1>
+        <p>{{ t('github.subtitle', lang) }}</p>
+        <a href="{{ url_for('github_project_new', lang=lang) }}">{{ t('github.new', lang) }}</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('github.field.name', lang) }}</th>
+                    <th>{{ t('github.field.status', lang) }}</th>
+                    <th>{{ t('github.field.potential_impact', lang) }}</th>
+                    <th>{{ t('common.actions', lang) }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td><span class="badge {{ item.status }}">{{ t('status.' ~ item.status, lang) }}</span></td>
+                        <td>{{ item.potential_impact }}</td>
+                        <td>
+                            <div class="actions">
+                                <a href="{{ url_for('github_project_edit', item_id=item.id, lang=lang) }}">{{ t('common.edit', lang) }}</a>
+                                <form method="post" action="{{ url_for('github_project_delete', item_id=item.id, lang=lang) }}">
+                                    <button type="submit">{{ t('common.delete', lang) }}</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        """
+        return render_page(lang, t("github.title", lang), body, items=items)
+
+    @app.route("/github-projects/new", methods=["GET", "POST"])
+    def github_project_new() -> str:
+        lang = get_selected_language()
+        if request.method == "POST":
+            upsert_github_project(None, dict(request.form))
+            return redirect(url_for("github_projects", lang=lang))
+
+        form_data = {
+            "name": "",
+            "summary": "",
+            "solved_problem": "",
+            "technologies": "",
+            "repo_url": "",
+            "status": "idea",
+            "potential_impact": "",
+            "generated_evidence": "",
+            "related_articles": "",
+            "related_criteria": "",
+        }
+        body = """
+        <h1>{{ t('github.new', lang) }}</h1>
+        <form method="post" action="{{ url_for('github_project_new', lang=lang) }}">
+            {{ github_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(lang, t("github.new", lang), body, github_form=render_github_project_form(lang, form_data))
+
+    @app.route("/github-projects/<int:item_id>/edit", methods=["GET", "POST"])
+    def github_project_edit(item_id: int) -> str:
+        lang = get_selected_language()
+        item = fetch_github_project_by_id(item_id)
+        if not item:
+            return redirect(url_for("github_projects", lang=lang))
+        if request.method == "POST":
+            upsert_github_project(item_id, dict(request.form))
+            return redirect(url_for("github_projects", lang=lang))
+
+        body = """
+        <h1>{{ t('github.edit', lang) }}</h1>
+        <form method="post" action="{{ url_for('github_project_edit', item_id=item.id, lang=lang) }}">
+            {{ github_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(lang, t("github.edit", lang), body, item=item, github_form=render_github_project_form(lang, item))
+
+    @app.route("/github-projects/<int:item_id>/delete", methods=["POST"])
+    def github_project_delete(item_id: int) -> Any:
+        lang = get_selected_language()
+        delete_github_project(item_id)
+        return redirect(url_for("github_projects", lang=lang))
+
+    @app.route("/linkedin-content")
+    def linkedin_content() -> str:
+        lang = get_selected_language()
+        items = fetch_linkedin_contents()
+        body = """
+        <h1>{{ t('linkedin.title', lang) }}</h1>
+        <p>{{ t('linkedin.subtitle', lang) }}</p>
+        <a href="{{ url_for('linkedin_content_new', lang=lang) }}">{{ t('linkedin.new', lang) }}</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('linkedin.field.title', lang) }}</th>
+                    <th>{{ t('linkedin.field.content_type', lang) }}</th>
+                    <th>{{ t('linkedin.field.status', lang) }}</th>
+                    <th>{{ t('linkedin.field.objective', lang) }}</th>
+                    <th>{{ t('common.actions', lang) }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>{{ item.title }}</td>
+                        <td>{{ t('linkedin.type.' ~ item.content_type, lang) }}</td>
+                        <td><span class="badge {{ item.status }}">{{ t('status.' ~ item.status, lang) }}</span></td>
+                        <td>{{ t('linkedin.objective.' ~ item.objective, lang) }}</td>
+                        <td>
+                            <div class="actions">
+                                <a href="{{ url_for('linkedin_content_edit', item_id=item.id, lang=lang) }}">{{ t('common.edit', lang) }}</a>
+                                <form method="post" action="{{ url_for('linkedin_content_delete', item_id=item.id, lang=lang) }}">
+                                    <button type="submit">{{ t('common.delete', lang) }}</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        """
+        return render_page(lang, t("linkedin.title", lang), body, items=items)
+
+    @app.route("/linkedin-content/new", methods=["GET", "POST"])
+    def linkedin_content_new() -> str:
+        lang = get_selected_language()
+        if request.method == "POST":
+            upsert_linkedin_content(None, dict(request.form))
+            return redirect(url_for("linkedin_content", lang=lang))
+
+        form_data = {
+            "title": "",
+            "content_type": "short_post",
+            "theme": "",
+            "status": "draft",
+            "planned_date": "",
+            "published_link": "",
+            "related_evidence": "",
+            "objective": "authority",
+        }
+        body = """
+        <h1>{{ t('linkedin.new', lang) }}</h1>
+        <form method="post" action="{{ url_for('linkedin_content_new', lang=lang) }}">
+            {{ linkedin_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(lang, t("linkedin.new", lang), body, linkedin_form=render_linkedin_content_form(lang, form_data))
+
+    @app.route("/linkedin-content/<int:item_id>/edit", methods=["GET", "POST"])
+    def linkedin_content_edit(item_id: int) -> str:
+        lang = get_selected_language()
+        item = fetch_linkedin_content_by_id(item_id)
+        if not item:
+            return redirect(url_for("linkedin_content", lang=lang))
+        if request.method == "POST":
+            upsert_linkedin_content(item_id, dict(request.form))
+            return redirect(url_for("linkedin_content", lang=lang))
+
+        body = """
+        <h1>{{ t('linkedin.edit', lang) }}</h1>
+        <form method="post" action="{{ url_for('linkedin_content_edit', item_id=item.id, lang=lang) }}">
+            {{ linkedin_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(lang, t("linkedin.edit", lang), body, item=item, linkedin_form=render_linkedin_content_form(lang, item))
+
+    @app.route("/linkedin-content/<int:item_id>/delete", methods=["POST"])
+    def linkedin_content_delete(item_id: int) -> Any:
+        lang = get_selected_language()
+        delete_linkedin_content(item_id)
+        return redirect(url_for("linkedin_content", lang=lang))
+
+    @app.route("/recommenders")
+    def recommenders() -> str:
+        lang = get_selected_language()
+        items = fetch_recommenders()
+        body = """
+        <h1>{{ t('recommender.title', lang) }}</h1>
+        <p>{{ t('recommender.subtitle', lang) }}</p>
+        <a href="{{ url_for('recommender_new', lang=lang) }}">{{ t('recommender.new', lang) }}</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('recommender.field.name', lang) }}</th>
+                    <th>{{ t('recommender.field.relationship', lang) }}</th>
+                    <th>{{ t('recommender.field.letter_strength', lang) }}</th>
+                    <th>{{ t('recommender.field.status', lang) }}</th>
+                    <th>{{ t('common.actions', lang) }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.relationship }}</td>
+                        <td><span class="badge {{ item.letter_strength }}">{{ t('strength.' ~ item.letter_strength, lang) }}</span></td>
+                        <td><span class="badge {{ item.status }}">{{ t('status.' ~ item.status, lang) }}</span></td>
+                        <td>
+                            <div class="actions">
+                                <a href="{{ url_for('recommender_edit', item_id=item.id, lang=lang) }}">{{ t('common.edit', lang) }}</a>
+                                <form method="post" action="{{ url_for('recommender_delete', item_id=item.id, lang=lang) }}">
+                                    <button type="submit">{{ t('common.delete', lang) }}</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        """
+        return render_page(lang, t("recommender.title", lang), body, items=items)
+
+    @app.route("/recommenders/new", methods=["GET", "POST"])
+    def recommender_new() -> str:
+        lang = get_selected_language()
+        if request.method == "POST":
+            upsert_recommender(None, dict(request.form))
+            return redirect(url_for("recommenders", lang=lang))
+
+        form_data = {
+            "name": "",
+            "relationship": "",
+            "organization": "",
+            "role_title": "",
+            "email": "",
+            "letter_strength": "medium",
+            "independence": "independent",
+            "validation_area": "",
+            "status": "prospect",
+            "notes": "",
+        }
+        body = """
+        <h1>{{ t('recommender.new', lang) }}</h1>
+        <form method="post" action="{{ url_for('recommender_new', lang=lang) }}">
+            {{ recommender_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(lang, t("recommender.new", lang), body, recommender_form=render_recommender_form(lang, form_data))
+
+    @app.route("/recommenders/<int:item_id>/edit", methods=["GET", "POST"])
+    def recommender_edit(item_id: int) -> str:
+        lang = get_selected_language()
+        item = fetch_recommender_by_id(item_id)
+        if not item:
+            return redirect(url_for("recommenders", lang=lang))
+        if request.method == "POST":
+            upsert_recommender(item_id, dict(request.form))
+            return redirect(url_for("recommenders", lang=lang))
+
+        body = """
+        <h1>{{ t('recommender.edit', lang) }}</h1>
+        <form method="post" action="{{ url_for('recommender_edit', item_id=item.id, lang=lang) }}">
+            {{ recommender_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(lang, t("recommender.edit", lang), body, item=item, recommender_form=render_recommender_form(lang, item))
+
+    @app.route("/recommenders/<int:item_id>/delete", methods=["POST"])
+    def recommender_delete(item_id: int) -> Any:
+        lang = get_selected_language()
+        delete_recommender(item_id)
+        return redirect(url_for("recommenders", lang=lang))
+
+    @app.route("/report/export")
+    def export_report() -> Any:
+        lang = get_selected_language()
+        payload = build_organizational_report_payload()
+
+        if request.args.get("download") == "1":
+            content = json.dumps(payload, ensure_ascii=False, indent=2)
+            return app.response_class(
+                content,
+                mimetype="application/json",
+                headers={"Content-Disposition": "attachment; filename=readiness_report.json"},
+            )
+
+        body = """
+        <h1>{{ t('report.title', lang) }}</h1>
+        <p>{{ t('report.subtitle', lang) }}</p>
+        <p class="small">{{ t('report.private_filter_note', lang) }}</p>
+        <p>
+            <a href="{{ url_for('export_report', lang=lang, download='1') }}">{{ t('report.download_json', lang) }}</a>
+        </p>
+        <div class="cards">
+            <article class="card"><h3>{{ t('dashboard.card.evidences', lang) }}</h3><p class="metric">{{ payload.evidences|length }}</p></article>
+            <article class="card"><h3>{{ t('dashboard.card.overall_score', lang) }}</h3><p class="metric">{{ payload.readiness.eb2.overall_score }}</p></article>
+            <article class="card"><h3>{{ t('dashboard.card.niw_score', lang) }}</h3><p class="metric">{{ payload.readiness.niw_average }}</p></article>
+        </div>
+        """
+        return render_page(lang, t("report.title", lang), body, payload=payload)
 
     @app.route("/settings", methods=["GET", "POST"])
     def settings() -> str:
