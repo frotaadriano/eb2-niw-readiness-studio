@@ -1,0 +1,7 @@
+{
+  "app.title": "EB2-NIW Readiness Studio",
+  "app.subtitle": "Local-first tool to organize readiness evidence, gaps, and roadmap.",
+  "app.disclaimer": "Educational and organizational use only. Not legal or immigration advice. No approval promise.",
+  "app.privacy_notice": "Use fake/demo data only in this public repository. Do not commit sensitive personal data.",
+  "app.status": "Status: Initial foundation is ready."
+}

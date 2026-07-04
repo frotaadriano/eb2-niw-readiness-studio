@@ -1,0 +1,14 @@
+[
+  {
+    "category": "open_source",
+    "title": "Maintainer of demo OSS project",
+    "impact_level": 4,
+    "is_private": false
+  },
+  {
+    "category": "recommendation_support",
+    "title": "Private recommendation draft",
+    "impact_level": 2,
+    "is_private": true
+  }
+]
