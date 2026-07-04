@@ -6,9 +6,11 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from flask import Flask, g, redirect, render_template_string, request, url_for
+import requests
 
 load_dotenv()
 
@@ -796,6 +798,194 @@ def filter_ai_allowed_evidences(evidences: list[dict[str, Any]]) -> list[dict[st
     ]
 
 
+AI_PROVIDER_TIMEOUT_SECONDS = 30
+AI_SENSITIVE_CONTEXT_KEYS = {
+    "address",
+    "cpf",
+    "document_number",
+    "email",
+    "passport",
+    "phone",
+    "ssn",
+}
+
+
+def _is_local_base_url(base_url: str) -> bool:
+    parsed = urlparse(base_url)
+    hostname = (parsed.hostname or "").lower()
+    return hostname in {"localhost", "127.0.0.1", "::1"}
+
+
+def _mask_sensitive_value(value: Any) -> Any:
+    if value is None:
+        return None
+    return "[redacted]"
+
+
+def sanitize_ai_context(context: dict[str, Any] | None, *, allow_private: bool) -> dict[str, Any]:
+    if context is None:
+        return {}
+
+    def _sanitize(value: Any, key: str | None = None) -> Any:
+        if isinstance(value, dict):
+            sanitized: dict[str, Any] = {}
+            for nested_key, nested_value in value.items():
+                nested_key_str = str(nested_key)
+                if not allow_private and nested_key_str in AI_SENSITIVE_CONTEXT_KEYS:
+                    sanitized[nested_key_str] = _mask_sensitive_value(nested_value)
+                    continue
+                if nested_key_str == "evidences" and isinstance(nested_value, list):
+                    evidences = [dict(item) for item in nested_value if isinstance(item, dict)]
+                    sanitized[nested_key_str] = evidences if allow_private else filter_ai_allowed_evidences(evidences)
+                    continue
+                sanitized[nested_key_str] = _sanitize(nested_value, nested_key_str)
+            return sanitized
+        if isinstance(value, list):
+            return [_sanitize(item, key) for item in value]
+        if not allow_private and key in AI_SENSITIVE_CONTEXT_KEYS:
+            return _mask_sensitive_value(value)
+        return value
+
+    return _sanitize(context)
+
+
+def build_ai_error_result(
+    provider: str,
+    error_code: str,
+    error_message: str,
+    *,
+    retryable: bool = False,
+    model: str | None = None,
+) -> dict[str, Any]:
+    result = {
+        "provider": provider,
+        "status": "error",
+        "error_code": error_code,
+        "error_message": error_message,
+        "retryable": retryable,
+        "tokens_used": 0,
+    }
+    if model is not None:
+        result["model"] = model
+    return result
+
+
+def build_ai_messages(prompt: str, context: dict[str, Any] | None) -> list[dict[str, str]]:
+    if not context:
+        return [{"role": "user", "content": prompt}]
+
+    context_text = json.dumps(context, ensure_ascii=False, sort_keys=True)
+    return [
+        {
+            "role": "user",
+            "content": f"{prompt}\n\nContext:\n{context_text}",
+        }
+    ]
+
+
+def parse_chat_completion_response(response: requests.Response, provider: str, model: str) -> dict[str, Any]:
+    try:
+        payload = response.json()
+    except ValueError:
+        return build_ai_error_result(provider, "invalid_response", "Provider returned invalid JSON.", retryable=False, model=model)
+
+    analysis = ""
+    tokens_used = 0
+    if isinstance(payload, dict):
+        choices = payload.get("choices") or []
+        if choices:
+            first_choice = choices[0] if isinstance(choices[0], dict) else {}
+            message = first_choice.get("message") if isinstance(first_choice, dict) else {}
+            if isinstance(message, dict):
+                analysis = str(message.get("content", "")).strip()
+            elif first_choice.get("text"):
+                analysis = str(first_choice.get("text", "")).strip()
+        usage = payload.get("usage")
+        if isinstance(usage, dict):
+            tokens_used = int(usage.get("total_tokens") or 0)
+        elif isinstance(payload.get("total_tokens"), int):
+            tokens_used = int(payload["total_tokens"])
+
+    return {
+        "provider": provider,
+        "status": "ok",
+        "model": model,
+        "analysis": analysis or "No analysis content returned by provider.",
+        "tokens_used": tokens_used,
+    }
+
+
+def perform_chat_completion(
+    url: str,
+    headers: dict[str, str],
+    payload: dict[str, Any],
+    *,
+    provider: str,
+    model: str,
+) -> dict[str, Any]:
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=AI_PROVIDER_TIMEOUT_SECONDS)
+    except requests.RequestException as exc:
+        return build_ai_error_result(provider, "request_error", str(exc), retryable=True, model=model)
+
+    if response.status_code >= 400:
+        retryable = response.status_code >= 500 or response.status_code == 429
+        message = response.text.strip() or f"HTTP {response.status_code} from provider."
+        return build_ai_error_result(provider, f"http_{response.status_code}", message, retryable=retryable, model=model)
+
+    return parse_chat_completion_response(response, provider, model)
+
+
+def record_ai_analysis_run(
+    provider: str,
+    run_type: str,
+    status: str,
+    metadata: dict[str, Any],
+    *,
+    db_path: str | None = None,
+) -> None:
+    target_db = db_path or DEFAULT_DB_PATH
+    try:
+        ensure_data_dir()
+        conn = sqlite3.connect(target_db)
+        try:
+            conn.execute(
+                """
+                INSERT INTO ai_analysis_runs (provider, run_type, status, metadata_json)
+                VALUES (?, ?, ?, ?)
+                """,
+                (provider, run_type, status, json.dumps(metadata, ensure_ascii=False, sort_keys=True)),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return
+
+
+def analyze_with_provider(
+    prompt: str,
+    context: dict[str, Any] | None = None,
+    provider_name: str | None = None,
+    *,
+    run_type: str = "analysis",
+) -> dict[str, Any]:
+    provider = get_ai_provider(provider_name)
+    result = provider.analyze(prompt, context)
+    record_ai_analysis_run(
+        provider.provider_name,
+        run_type,
+        str(result.get("status", "error")),
+        {
+            "model": result.get("model"),
+            "retryable": result.get("retryable"),
+            "error_code": result.get("error_code"),
+            "prompt_hash": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+        },
+    )
+    return result
+
+
 def build_export_payload(profile: dict[str, Any], evidences: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "disclaimer": "Educational and organizational only. Not legal or immigration advice.",
@@ -809,6 +999,9 @@ class ProviderConfigError(RuntimeError):
 
 
 class BaseAIProvider(ABC):
+    def name(self) -> str:
+        return self.provider_name
+
     @property
     @abstractmethod
     def provider_name(self) -> str:
@@ -828,14 +1021,21 @@ class MockProvider(BaseAIProvider):
         return "mock"
 
     def analyze(self, prompt: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
-        digest = hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:12]
+        sanitized_context = sanitize_ai_context(context, allow_private=True)
+        digest_input = json.dumps({"prompt": prompt, "context": sanitized_context}, ensure_ascii=False, sort_keys=True)
+        digest = hashlib.sha256(digest_input.encode("utf-8")).hexdigest()[:12]
+        context_size = len(sanitized_context) if isinstance(sanitized_context, dict) else 0
         return {
             "provider": self.provider_name,
             "status": "ok",
             "model": "mock-v1",
             "analysis": f"Mock analysis generated for prompt hash {digest}.",
             "tokens_used": 0,
+            "context_items": context_size,
         }
+
+    def healthcheck(self) -> dict[str, Any]:
+        return {"provider": self.provider_name, "status": "ok", "model": "mock-v1"}
 
 
 class OpenAIProvider(BaseAIProvider):
@@ -844,15 +1044,21 @@ class OpenAIProvider(BaseAIProvider):
         return "openai"
 
     def analyze(self, prompt: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
-        if not os.getenv("OPENAI_API_KEY"):
-            raise ProviderConfigError("OPENAI_API_KEY is not configured")
-        return {
-            "provider": self.provider_name,
-            "status": "error",
-            "model": os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-            "analysis": "Provider stub: integration pending.",
-            "tokens_used": 0,
+        api_key = os.getenv("OPENAI_API_KEY")
+        model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        if not api_key:
+            return build_ai_error_result(self.provider_name, "missing_configuration", "OPENAI_API_KEY is not configured.", model=model)
+
+        payload = {
+            "model": model,
+            "messages": build_ai_messages(prompt, sanitize_ai_context(context, allow_private=False)),
+            "temperature": 0.2,
         }
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        return perform_chat_completion("https://api.openai.com/v1/chat/completions", headers, payload, provider=self.provider_name, model=model)
 
 
 class AzureOpenAIProvider(BaseAIProvider):
@@ -864,14 +1070,28 @@ class AzureOpenAIProvider(BaseAIProvider):
         required_vars = ["AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_DEPLOYMENT"]
         missing = [name for name in required_vars if not os.getenv(name)]
         if missing:
-            raise ProviderConfigError(f"Missing Azure OpenAI settings: {', '.join(missing)}")
-        return {
-            "provider": self.provider_name,
-            "status": "error",
-            "model": os.getenv("AZURE_OPENAI_DEPLOYMENT"),
-            "analysis": "Provider stub: integration pending.",
-            "tokens_used": 0,
+            deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT")
+            return build_ai_error_result(
+                self.provider_name,
+                "missing_configuration",
+                f"Missing Azure OpenAI settings: {', '.join(missing)}",
+                model=deployment,
+            )
+
+        endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
+        deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "")
+        api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-06-01")
+        model = deployment
+        payload = {
+            "messages": build_ai_messages(prompt, sanitize_ai_context(context, allow_private=False)),
+            "temperature": 0.2,
         }
+        headers = {
+            "api-key": os.getenv("AZURE_OPENAI_API_KEY", ""),
+            "Content-Type": "application/json",
+        }
+        url = f"{endpoint}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
+        return perform_chat_completion(url, headers, payload, provider=self.provider_name, model=model)
 
 
 class OllamaProvider(BaseAIProvider):
@@ -880,15 +1100,55 @@ class OllamaProvider(BaseAIProvider):
         return "ollama"
 
     def analyze(self, prompt: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
-        if not os.getenv("OLLAMA_BASE_URL"):
-            raise ProviderConfigError("OLLAMA_BASE_URL is not configured")
+        base_url = os.getenv("OLLAMA_BASE_URL")
+        model = os.getenv("OLLAMA_MODEL", "llama3")
+        if not base_url:
+            return build_ai_error_result(self.provider_name, "missing_configuration", "OLLAMA_BASE_URL is not configured.", model=model)
+
+        allow_private = _is_local_base_url(base_url)
+        payload = {
+            "model": model,
+            "messages": build_ai_messages(prompt, sanitize_ai_context(context, allow_private=allow_private)),
+            "stream": False,
+        }
+        url = f"{base_url.rstrip('/')}/api/chat"
+        try:
+            response = requests.post(url, json=payload, timeout=AI_PROVIDER_TIMEOUT_SECONDS)
+        except requests.RequestException as exc:
+            return build_ai_error_result(self.provider_name, "request_error", str(exc), retryable=True, model=model)
+
+        if response.status_code >= 400:
+            retryable = response.status_code >= 500 or response.status_code == 429
+            message = response.text.strip() or f"HTTP {response.status_code} from provider."
+            return build_ai_error_result(self.provider_name, f"http_{response.status_code}", message, retryable=retryable, model=model)
+
+        try:
+            payload = response.json()
+        except ValueError:
+            return build_ai_error_result(self.provider_name, "invalid_response", "Provider returned invalid JSON.", model=model)
+
+        analysis = ""
+        tokens_used = 0
+        if isinstance(payload, dict):
+            message = payload.get("message")
+            if isinstance(message, dict):
+                analysis = str(message.get("content", "")).strip()
+            tokens_used = int(payload.get("eval_count") or payload.get("prompt_eval_count") or 0)
+
         return {
             "provider": self.provider_name,
-            "status": "error",
-            "model": os.getenv("OLLAMA_MODEL", "llama3"),
-            "analysis": "Provider stub: integration pending.",
-            "tokens_used": 0,
+            "status": "ok",
+            "model": model,
+            "analysis": analysis or "No analysis content returned by provider.",
+            "tokens_used": tokens_used,
         }
+
+    def healthcheck(self) -> dict[str, Any]:
+        base_url = os.getenv("OLLAMA_BASE_URL")
+        model = os.getenv("OLLAMA_MODEL", "llama3")
+        if not base_url:
+            return {"provider": self.provider_name, "status": "error", "error_code": "missing_configuration", "error_message": "OLLAMA_BASE_URL is not configured.", "model": model}
+        return {"provider": self.provider_name, "status": "ok", "model": model, "local": _is_local_base_url(base_url)}
 
 
 def get_ai_provider(provider_name: str | None = None) -> BaseAIProvider:
