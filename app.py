@@ -110,6 +110,34 @@ ASSESSMENT_DIMENSIONS = [
     },
 ]
 
+EVIDENCE_TYPES = [
+    "Diploma",
+    "Historico academico",
+    "Certificacao",
+    "Carta de emprego",
+    "Carta de recomendacao",
+    "Projeto corporativo",
+    "Metrica de impacto",
+    "Artigo",
+    "Palestra",
+    "GitHub",
+    "Reconhecimento",
+    "Premio",
+    "Publicacao",
+    "Comunidade",
+    "Remuneracao",
+    "Curriculo",
+    "LinkedIn",
+    "Proposed endeavor",
+    "Case study anonimizado",
+    "Outro",
+]
+
+EVIDENCE_STATUS_OPTIONS = ["coletar", "em_revisao", "pronto", "fraco", "descartado"]
+ROADMAP_HORIZON_OPTIONS = ["0_30", "30_90", "3_6", "6_12"]
+ROADMAP_STATUS_OPTIONS = ["backlog", "in_progress", "completed", "blocked"]
+ROADMAP_PRIORITY_OPTIONS = ["low", "medium", "high", "critical"]
+
 def load_locale(locale: str) -> dict[str, str]:
     locale_path = BASE_DIR / "locales" / f"{locale}.json"
     fallback_path = BASE_DIR / "locales" / f"{DEFAULT_LOCALE}.json"
