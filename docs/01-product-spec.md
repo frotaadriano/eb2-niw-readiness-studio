@@ -37,6 +37,7 @@
 - Exportacao de relatorio organizacional.
 - Camada de IA plugavel com provider mock para modo offline.
 - Internacionalizacao PT-BR e EN-US.
+- Narrativa de portfolio tecnico com privacidade e limites de uso publico.
 
 ## Requisitos funcionais
 
@@ -48,6 +49,7 @@
 - RF-06: Permitir selecao de idioma PT-BR/EN-US.
 - RF-07: Exibir disclaimers legal/privacidade em telas e exportacoes.
 - RF-08: Definir provider de IA por configuracao de ambiente.
+- RF-09: Exibir orientacao de portfolio e limites de uso publico.
 
 ## Requisitos nao funcionais
 

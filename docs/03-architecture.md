@@ -40,7 +40,7 @@ Arquitetura web monolitica leve, local-first, com Flask para HTTP/renderizacao, 
 
 ## Exportacoes
 
-- Relatorios em JSON/TXT/HTML (fases futuras), iniciando por JSON demo.
+- Relatorios em JSON, Markdown e CSV por exportacao local.
 - Export deve incluir disclaimer legal.
 - Export deve excluir itens marcados como privados.
 

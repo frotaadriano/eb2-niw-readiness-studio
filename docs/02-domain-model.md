@@ -23,6 +23,21 @@
 7. AnalysisLog
 - Registro de analises assistidas por IA.
 
+8. Proposed Endeavor
+- Narrativa estruturada de area, problema, impacto e relevancia.
+
+9. AuthorityPlan
+- Plano de evolucao para autoridade tecnica.
+
+10. GitHubProject
+- Projeto publico com problema, tecnologia, impacto e evidencias.
+
+11. LinkedInContent
+- Ideias e publicacoes planejadas para portfolio e autoridade.
+
+12. Recommender
+- Contato de recomendador com relacao, independencia e forca potencial da carta.
+
 ## Campos essenciais
 
 ### Profile
@@ -43,6 +58,21 @@
 ### PublicProject
 - id, profile_id, name, repo_url, summary, tags, status
 
+### Proposed Endeavor
+- id, area, problem_to_solve, impacted_sector, technologies, relevance, experience_evidence, expected_impact, broader_importance, short_version, long_version, status
+
+### AuthorityPlan
+- id, channel, objective, cadence, status, main_theme, target_communities, planned_articles, planned_talks, planned_github_repos, events, people_recommenders, public_evidence
+
+### GitHubProject
+- id, name, summary, solved_problem, technologies, repo_url, status, potential_impact, generated_evidence, related_articles, related_criteria
+
+### LinkedInContent
+- id, title, content_type, theme, status, planned_date, published_link, related_evidence, objective
+
+### Recommender
+- id, name, relationship, organization, role_title, email, letter_strength, independence, validation_area, status, notes
+
 ### AnalysisLog
 - id, profile_id, provider_name, prompt_hash, output_summary, privacy_mode, created_at
 
@@ -55,6 +85,11 @@
 - Profile 1:N Publication
 - Profile 1:N PublicProject
 - Profile 1:N AnalysisLog
+- Profile 1:N Proposed Endeavor
+- Profile 1:N AuthorityPlan
+- Profile 1:N GitHubProject
+- Profile 1:N LinkedInContent
+- Profile 1:N Recommender
 
 ## Regras de scoring (educacional)
 

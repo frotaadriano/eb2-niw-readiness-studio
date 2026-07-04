@@ -24,6 +24,12 @@ EB2-NIW Readiness Studio e um portfolio tecnico completo por combinar engenharia
 ### i18n
 - Suporte PT-BR e EN-US desde a fundacao.
 
+### Portfolio value
+- Demonstra Python, Flask, SQLite, local-first architecture e abstracao de IA.
+- Mostra integracao com OpenAI, Azure OpenAI e Ollama sem acoplamento rigido.
+- Evidencia spec-driven development, harness de testes e exportacao estruturada.
+- Mostra privacy-by-design e organizacao de workflows de assessment.
+
 ### Testes
 - Harness com pytest cobrindo regras criticas.
 
@@ -42,3 +48,4 @@ EB2-NIW Readiness Studio e um portfolio tecnico completo por combinar engenharia
 - Como construir contratos de providers sem lock-in.
 - Como separar software educacional de aconselhamento juridico.
 - Como documentacao spec-driven acelera colaboracao com Copilot.
+- Como organizar um readiness studio com privacidade e dados fake/demo.

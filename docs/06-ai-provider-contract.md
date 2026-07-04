@@ -60,6 +60,7 @@ Resposta padrao de `analyze`:
 - Evidencias marcadas com `is_private=true` nao podem ser enviadas para providers externos.
 - Campos sensiveis devem ser removidos ou mascarados antes de qualquer envio.
 - O modo `mock` pode operar com dados completos apenas localmente.
+- O app deve preferir minimizar o contexto enviado mesmo em providers externos.
 
 ## Tratamento de erro
 

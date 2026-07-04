@@ -88,3 +88,9 @@ Status (implementado):
 - Melhorar UX e narrativa visual do projeto.
 - Adicionar screenshots e walkthrough tecnico.
 - Publicar artigos tecnicos com aprendizados.
+
+Status (implementado parcialmente):
+
+- README consolidado com disclaimers, stack, providers, i18n, harness, portfolio value, what this project is not e ideias de artigos para LinkedIn.
+- Docs revisados para refletir o app atual e manter futuros itens como roadmap quando ainda nao houver implementacao.
+- Melhorias finais de UX e screenshots continuam como roadmap.

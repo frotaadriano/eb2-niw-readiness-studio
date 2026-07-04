@@ -988,7 +988,7 @@ def analyze_with_provider(
 
 def build_export_payload(profile: dict[str, Any], evidences: list[dict[str, Any]]) -> dict[str, Any]:
     return {
-        "disclaimer": "Educational and organizational only. Not legal or immigration advice.",
+        "disclaimer": "Educational and organizational only. Not legal or immigration advice. Not a real approval estimate.",
         "profile": profile,
         "evidences": filter_private_evidences(evidences),
     }
@@ -998,7 +998,7 @@ def build_markdown_report(payload: dict[str, Any]) -> str:
     lines = [
         "# Organizational report",
         "",
-        payload.get("disclaimer", "Educational and organizational only. Not legal or immigration advice."),
+        payload.get("disclaimer", "Educational and organizational only. Not legal or immigration advice. Not a real approval estimate."),
         "",
         "## Profile",
     ]

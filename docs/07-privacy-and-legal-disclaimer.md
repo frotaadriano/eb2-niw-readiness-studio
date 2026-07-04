@@ -8,17 +8,20 @@ EB2-NIW Readiness Studio e uma ferramenta educacional e organizacional para apoi
 
 O projeto nao oferece aconselhamento juridico ou imigratorio.
 Nao substitui consulta com advogado de imigracao qualificado.
+Nao deve ser usado como unica base para decisao.
 
 ## Sem promessa de aprovacao
 
 O sistema nao promete aprovacao e nao estima chance real de aprovacao.
 Qualquer score interno e apenas indicador organizacional para acompanhamento pessoal.
+O score nao representa chance real de sucesso processual.
 
 ## Aviso de privacidade
 
 - O repositorio e publico e deve conter apenas dados fake/demo.
 - Nao inserir dados pessoais reais, documentos de imigracao, passaportes ou identificadores sensiveis.
 - Nao versionar arquivos com conteudo pessoal ou confidencial.
+- Nao usar o app como repositorio unico de documentos sensiveis.
 
 ## Uso local
 

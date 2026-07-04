@@ -43,3 +43,4 @@
 5. Checkpoint E: i18n validado por testes.
 6. Checkpoint F: providers + filtros de privacidade validados.
 7. Checkpoint G: README final e narrativa de portfolio consolidada.
+8. Checkpoint H: polish final com docs coerentes e orientacao de portfolio publico.
