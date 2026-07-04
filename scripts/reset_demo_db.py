@@ -5,16 +5,16 @@ from app import BASE_DIR, init_db
 
 
 def reset_demo_db() -> None:
-    db_path = BASE_DIR / "data" / "studio.db"
+    db_path = BASE_DIR / "data" / "app.db"
     init_db(str(db_path))
     conn = sqlite3.connect(str(db_path))
     try:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM evidences")
-        cursor.execute("DELETE FROM profiles")
+        cursor.execute("DELETE FROM profile")
         cursor.execute(
-            "INSERT INTO profiles (full_name, headline, target_domain, locale) VALUES (?, ?, ?, ?)",
-            ("Demo Profile", "Senior Engineer", "AI Platforms", "en-US"),
+            "INSERT INTO profile (full_name, headline, target_domain, locale) VALUES (?, ?, ?, ?)",
+            ("Demo Profile", "Senior Engineer", "AI Platforms", "pt-BR"),
         )
         profile_id = cursor.lastrowid
         cursor.execute(

@@ -22,7 +22,7 @@ Nao calcula chance real de aprovacao.
 
 ### Stack base
 
-- Python 3.12+
+- Python 3.11+
 - Flask
 - SQLite (local-first)
 - Pytest
@@ -38,6 +38,8 @@ python app.py
 ```
 
 Acesse: http://127.0.0.1:5000
+
+Ao iniciar com `python app.py`, o banco SQLite local e criado automaticamente em `data/app.db` com schema inicial e seed idempotente da Fase 1.
 
 ### Como rodar testes
 
@@ -111,4 +113,4 @@ pytest -q
 
 ### Current status
 
-Foundation created: specs, architecture docs, test harness, CI, i18n, and initial app skeleton.
+Phase 1 foundation implemented: Flask + SQLite local-first app, initial schema, idempotent seed, PT-BR/EN-US i18n, language selector persisted in `settings`, and initial routes (`/`, `/settings`, `/about`, `/health`).

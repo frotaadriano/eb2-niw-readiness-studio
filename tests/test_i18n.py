@@ -9,9 +9,9 @@ def test_locale_key_parity_minimum() -> None:
 
 def test_fallback_to_english_locale() -> None:
     unknown = load_locale("fr-FR")
-    en = load_locale("en-US")
-    assert unknown == en
+    pt = load_locale("pt-BR")
+    assert unknown == pt
 
 
 def test_missing_key_returns_key_name() -> None:
-    assert t("en-US", "missing.key") == "missing.key"
+    assert t("missing.key", "en-US") == "missing.key"
