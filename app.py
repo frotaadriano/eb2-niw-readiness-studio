@@ -409,6 +409,25 @@ def init_db(db_path: str = DEFAULT_DB_PATH) -> None:
         )
         cursor.execute(
             """
+            CREATE TABLE IF NOT EXISTS roadmap_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT,
+                category TEXT,
+                priority TEXT NOT NULL DEFAULT 'medium',
+                horizon TEXT NOT NULL DEFAULT '30_90',
+                status TEXT NOT NULL DEFAULT 'backlog',
+                target_date TEXT,
+                estimated_effort TEXT,
+                estimated_impact TEXT,
+                related_criteria TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS proposed_endeavor (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL UNIQUE,
@@ -498,6 +517,14 @@ def init_db(db_path: str = DEFAULT_DB_PATH) -> None:
         _ensure_column(conn, "assessment_answers", "justification", "TEXT")
         _ensure_column(conn, "assessment_answers", "status", "TEXT NOT NULL DEFAULT 'ausente'")
         _ensure_column(conn, "assessment_answers", "evidence_refs", "TEXT")
+        _ensure_column(conn, "evidences", "evidence_type", "TEXT NOT NULL DEFAULT 'Outro'")
+        _ensure_column(conn, "evidences", "link_or_path", "TEXT")
+        _ensure_column(conn, "evidences", "evidence_date", "TEXT")
+        _ensure_column(conn, "evidences", "relevance", "INTEGER NOT NULL DEFAULT 3")
+        _ensure_column(conn, "evidences", "related_criteria", "TEXT")
+        _ensure_column(conn, "evidences", "status", "TEXT NOT NULL DEFAULT 'coletar'")
+        _ensure_column(conn, "evidences", "notes", "TEXT")
+        _ensure_column(conn, "evidences", "can_send_to_ai", "INTEGER NOT NULL DEFAULT 0")
 
         _seed_initial_data(conn)
         conn.commit()
@@ -590,6 +617,14 @@ def compute_readiness_score(
 
 def filter_private_evidences(evidences: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [ev for ev in evidences if not bool(ev.get("is_private", False))]
+
+
+def filter_ai_allowed_evidences(evidences: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        ev
+        for ev in evidences
+        if bool(ev.get("can_send_to_ai", False)) and not bool(ev.get("is_private", False))
+    ]
 
 
 def build_export_payload(profile: dict[str, Any], evidences: list[dict[str, Any]]) -> dict[str, Any]:
@@ -792,6 +827,42 @@ def create_app() -> Flask:
               .small {
                 color: var(--muted);
               }
+                            table {
+                                width: 100%;
+                                border-collapse: collapse;
+                            }
+                            th, td {
+                                border-bottom: 1px solid var(--line);
+                                padding: 0.55rem;
+                                text-align: left;
+                                vertical-align: top;
+                            }
+                            input, select, textarea, button {
+                                font: inherit;
+                            }
+                            input[type="text"], input[type="date"], select, textarea {
+                                width: 100%;
+                                box-sizing: border-box;
+                                border: 1px solid var(--line);
+                                border-radius: 8px;
+                                padding: 0.45rem;
+                                margin-top: 0.2rem;
+                                margin-bottom: 0.55rem;
+                                background: #fff;
+                            }
+                            button {
+                                border: 1px solid #0f4f81;
+                                color: #fff;
+                                background: #0b5f9c;
+                                border-radius: 8px;
+                                padding: 0.4rem 0.75rem;
+                                cursor: pointer;
+                            }
+                            .actions {
+                                display: flex;
+                                gap: 0.45rem;
+                                flex-wrap: wrap;
+                            }
                             .badge {
                                 display: inline-block;
                                 border-radius: 999px;
@@ -802,7 +873,11 @@ def create_app() -> Flask:
                             }
                             .badge.forte,
                             .badge.strong,
-                            .badge.robust {
+                            .badge.robust,
+                            .badge.pronto,
+                            .badge.completed,
+                            .badge.done,
+                            .badge.low {
                                 background: #eaf8ee;
                                 border-color: #2f8f4b;
                                 color: #1f6a35;
@@ -810,7 +885,11 @@ def create_app() -> Flask:
                             .badge.medio,
                             .badge.medium,
                             .badge.moderate,
-                            .badge.initial {
+                            .badge.initial,
+                            .badge.em_revisao,
+                            .badge.in_progress,
+                            .badge.backlog,
+                            .badge.medium {
                                 background: #fff5e8;
                                 border-color: #c9791c;
                                 color: #8b4a00;
@@ -819,7 +898,11 @@ def create_app() -> Flask:
                             .badge.weak,
                             .badge.low,
                             .badge.ausente,
-                            .badge.missing {
+                            .badge.missing,
+                            .badge.descartado,
+                            .badge.blocked,
+                            .badge.high,
+                            .badge.critical {
                                 background: #fdeced;
                                 border-color: #c73d3d;
                                 color: #8f1f28;
@@ -841,6 +924,9 @@ def create_app() -> Flask:
                 <a href="{{ url_for('dashboard', lang=lang) }}">{{ t('nav.dashboard', lang) }}</a>
                 <a href="{{ url_for('assessment', lang=lang) }}">{{ t('nav.assessment', lang) }}</a>
                 <a href="{{ url_for('niw', lang=lang) }}">{{ t('nav.niw', lang) }}</a>
+                <a href="{{ url_for('evidences', lang=lang) }}">{{ t('nav.evidences', lang) }}</a>
+                <a href="{{ url_for('roadmap', lang=lang) }}">{{ t('nav.roadmap', lang) }}</a>
+                <a href="{{ url_for('gaps', lang=lang) }}">{{ t('nav.gaps', lang) }}</a>
                 <a href="{{ url_for('settings', lang=lang) }}">{{ t('nav.settings', lang) }}</a>
                 <a href="{{ url_for('about', lang=lang) }}">{{ t('nav.about', lang) }}</a>
                 <span class="small language">{{ t('settings.current_language', lang) }}: {{ lang }}</span>
@@ -858,10 +944,13 @@ def create_app() -> Flask:
 
     def dashboard_stats() -> dict[str, int]:
         conn = get_db()
+        roadmap_count = conn.execute("SELECT COUNT(*) FROM roadmap_items").fetchone()[0]
+        if roadmap_count == 0:
+            roadmap_count = conn.execute("SELECT COUNT(*) FROM roadmap_tasks").fetchone()[0]
         return {
             "assessment_questions": conn.execute("SELECT COUNT(*) FROM assessment_questions").fetchone()[0],
             "niw_prongs": conn.execute("SELECT COUNT(*) FROM niw_prongs").fetchone()[0],
-            "roadmap_tasks": conn.execute("SELECT COUNT(*) FROM roadmap_tasks").fetchone()[0],
+            "roadmap_tasks": roadmap_count,
             "github_projects": conn.execute("SELECT COUNT(*) FROM github_projects").fetchone()[0],
             "linkedin_content": conn.execute("SELECT COUNT(*) FROM linkedin_content").fetchone()[0],
         }
@@ -986,22 +1075,473 @@ def create_app() -> Flask:
         )
         conn.commit()
 
+    def fetch_evidence_list(status: str = "", category: str = "") -> list[dict[str, Any]]:
+        conn = get_db()
+        query = """
+            SELECT
+                id,
+                title,
+                evidence_type,
+                category,
+                description,
+                link_or_path,
+                evidence_date,
+                relevance,
+                related_criteria,
+                status,
+                notes,
+                can_send_to_ai
+            FROM evidences
+            WHERE 1=1
+        """
+        params: list[Any] = []
+        if status:
+            query += " AND status = ?"
+            params.append(status)
+        if category:
+            query += " AND category = ?"
+            params.append(category)
+        query += " ORDER BY COALESCE(evidence_date, '') DESC, id DESC"
+        rows = conn.execute(query, tuple(params)).fetchall()
+        return [dict(row) for row in rows]
+
+    def fetch_evidence_by_id(evidence_id: int) -> dict[str, Any] | None:
+        conn = get_db()
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                title,
+                evidence_type,
+                category,
+                description,
+                link_or_path,
+                evidence_date,
+                relevance,
+                related_criteria,
+                status,
+                notes,
+                can_send_to_ai
+            FROM evidences
+            WHERE id = ?
+            """,
+            (evidence_id,),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def upsert_evidence(evidence_id: int | None, form_data: dict[str, str]) -> None:
+        conn = get_db()
+        payload = {
+            "title": form_data.get("title", "").strip(),
+            "evidence_type": form_data.get("evidence_type", "Outro").strip() or "Outro",
+            "category": form_data.get("category", "").strip(),
+            "description": form_data.get("description", "").strip(),
+            "link_or_path": form_data.get("link_or_path", "").strip(),
+            "evidence_date": form_data.get("evidence_date", "").strip(),
+            "relevance": max(1, min(5, int(form_data.get("relevance", "3") or "3"))),
+            "related_criteria": form_data.get("related_criteria", "").strip(),
+            "status": form_data.get("status", "coletar").strip() or "coletar",
+            "notes": form_data.get("notes", "").strip(),
+            "can_send_to_ai": 1 if form_data.get("can_send_to_ai") == "on" else 0,
+        }
+        if payload["status"] not in EVIDENCE_STATUS_OPTIONS:
+            payload["status"] = "coletar"
+        if payload["evidence_type"] not in EVIDENCE_TYPES:
+            payload["evidence_type"] = "Outro"
+
+        if evidence_id is None:
+            conn.execute(
+                """
+                INSERT INTO evidences
+                (title, evidence_type, category, description, link_or_path, evidence_date, relevance, related_criteria, status, notes, can_send_to_ai, impact_level, is_private)
+                VALUES (:title, :evidence_type, :category, :description, :link_or_path, :evidence_date, :relevance, :related_criteria, :status, :notes, :can_send_to_ai, :relevance, :is_private)
+                """,
+                {
+                    **payload,
+                    "is_private": 0 if payload["can_send_to_ai"] else 1,
+                },
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE evidences
+                SET title = :title,
+                    evidence_type = :evidence_type,
+                    category = :category,
+                    description = :description,
+                    link_or_path = :link_or_path,
+                    evidence_date = :evidence_date,
+                    relevance = :relevance,
+                    related_criteria = :related_criteria,
+                    status = :status,
+                    notes = :notes,
+                    can_send_to_ai = :can_send_to_ai,
+                    impact_level = :relevance,
+                    is_private = :is_private
+                WHERE id = :id
+                """,
+                {
+                    **payload,
+                    "id": evidence_id,
+                    "is_private": 0 if payload["can_send_to_ai"] else 1,
+                },
+            )
+        conn.commit()
+
+    def delete_evidence(evidence_id: int) -> None:
+        conn = get_db()
+        conn.execute("DELETE FROM evidences WHERE id = ?", (evidence_id,))
+        conn.commit()
+
+    def fetch_roadmap_items(status: str = "", category: str = "", horizon: str = "") -> list[dict[str, Any]]:
+        conn = get_db()
+        query = """
+            SELECT
+                id,
+                title,
+                description,
+                category,
+                priority,
+                horizon,
+                status,
+                target_date,
+                estimated_effort,
+                estimated_impact,
+                related_criteria
+            FROM roadmap_items
+            WHERE 1=1
+        """
+        params: list[Any] = []
+        if status:
+            query += " AND status = ?"
+            params.append(status)
+        if category:
+            query += " AND category = ?"
+            params.append(category)
+        if horizon:
+            query += " AND horizon = ?"
+            params.append(horizon)
+        query += " ORDER BY CASE horizon WHEN '0_30' THEN 1 WHEN '30_90' THEN 2 WHEN '3_6' THEN 3 ELSE 4 END, COALESCE(target_date, ''), id"
+        rows = conn.execute(query, tuple(params)).fetchall()
+        return [dict(row) for row in rows]
+
+    def fetch_roadmap_item_by_id(item_id: int) -> dict[str, Any] | None:
+        conn = get_db()
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                title,
+                description,
+                category,
+                priority,
+                horizon,
+                status,
+                target_date,
+                estimated_effort,
+                estimated_impact,
+                related_criteria
+            FROM roadmap_items
+            WHERE id = ?
+            """,
+            (item_id,),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def upsert_roadmap_item(item_id: int | None, form_data: dict[str, str]) -> None:
+        conn = get_db()
+        payload = {
+            "title": form_data.get("title", "").strip(),
+            "description": form_data.get("description", "").strip(),
+            "category": form_data.get("category", "").strip(),
+            "priority": form_data.get("priority", "medium").strip() or "medium",
+            "horizon": form_data.get("horizon", "30_90").strip() or "30_90",
+            "status": form_data.get("status", "backlog").strip() or "backlog",
+            "target_date": form_data.get("target_date", "").strip(),
+            "estimated_effort": form_data.get("estimated_effort", "").strip(),
+            "estimated_impact": form_data.get("estimated_impact", "").strip(),
+            "related_criteria": form_data.get("related_criteria", "").strip(),
+        }
+        if payload["priority"] not in ROADMAP_PRIORITY_OPTIONS:
+            payload["priority"] = "medium"
+        if payload["horizon"] not in ROADMAP_HORIZON_OPTIONS:
+            payload["horizon"] = "30_90"
+        if payload["status"] not in ROADMAP_STATUS_OPTIONS:
+            payload["status"] = "backlog"
+
+        if item_id is None:
+            conn.execute(
+                """
+                INSERT INTO roadmap_items
+                (title, description, category, priority, horizon, status, target_date, estimated_effort, estimated_impact, related_criteria)
+                VALUES (:title, :description, :category, :priority, :horizon, :status, :target_date, :estimated_effort, :estimated_impact, :related_criteria)
+                """,
+                payload,
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE roadmap_items
+                SET title = :title,
+                    description = :description,
+                    category = :category,
+                    priority = :priority,
+                    horizon = :horizon,
+                    status = :status,
+                    target_date = :target_date,
+                    estimated_effort = :estimated_effort,
+                    estimated_impact = :estimated_impact,
+                    related_criteria = :related_criteria,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = :id
+                """,
+                {**payload, "id": item_id},
+            )
+        conn.commit()
+
+    def delete_roadmap_item(item_id: int) -> None:
+        conn = get_db()
+        conn.execute("DELETE FROM roadmap_items WHERE id = ?", (item_id,))
+        conn.commit()
+
+    def build_gaps_summary() -> list[dict[str, str]]:
+        conn = get_db()
+        gaps_list: list[dict[str, str]] = []
+
+        low_questions = conn.execute(
+            """
+            SELECT q.category_key, q.question_key, COALESCE(a.score, 0) AS score
+            FROM assessment_questions q
+            LEFT JOIN assessment_answers a ON a.question_id = q.id
+            WHERE COALESCE(a.score, 0) <= 2
+            ORDER BY q.sort_order
+            """
+        ).fetchall()
+        for row in low_questions:
+            gaps_list.append(
+                {
+                    "gap": f"assessment:{row['question_key']}",
+                    "severity": "high" if int(row["score"]) <= 1 else "medium",
+                    "related_criteria": str(row["category_key"]),
+                    "missing_evidences": "score_low",
+                    "suggested_task": "action.raise_assessment_score",
+                    "priority": "high" if int(row["score"]) <= 1 else "medium",
+                }
+            )
+
+        low_prongs = conn.execute(
+            """
+            SELECT p.title_key, p.code, COALESCE(a.score, 0) AS score
+            FROM niw_prongs p
+            LEFT JOIN niw_prong_assessments a ON a.prong_code = p.code
+            WHERE COALESCE(a.score, 0) < 60
+            ORDER BY p.id
+            """
+        ).fetchall()
+        for row in low_prongs:
+            gaps_list.append(
+                {
+                    "gap": f"niw:{row['title_key']}",
+                    "severity": "high" if int(row["score"]) < 40 else "medium",
+                    "related_criteria": str(row["code"]),
+                    "missing_evidences": "niw_supporting_evidence",
+                    "suggested_task": "action.raise_niw_prong",
+                    "priority": "high",
+                }
+            )
+
+        evidence_categories = {
+            str(row[0])
+            for row in conn.execute("SELECT DISTINCT TRIM(COALESCE(category, '')) FROM evidences WHERE TRIM(COALESCE(category, '')) <> ''")
+        }
+        expected_categories = {item["category_key"] for item in ASSESSMENT_DIMENSIONS}
+        for missing_category in sorted(expected_categories - evidence_categories):
+            gaps_list.append(
+                {
+                    "gap": "missing_category_evidence",
+                    "severity": "medium",
+                    "related_criteria": missing_category,
+                    "missing_evidences": missing_category,
+                    "suggested_task": "action.collect_category_evidence",
+                    "priority": "medium",
+                }
+            )
+
+        overdue_items = conn.execute(
+            """
+            SELECT title, related_criteria
+            FROM roadmap_items
+            WHERE target_date <> ''
+              AND date(target_date) < date('now')
+              AND status NOT IN ('completed')
+            ORDER BY target_date
+            """
+        ).fetchall()
+        for row in overdue_items:
+            gaps_list.append(
+                {
+                    "gap": f"overdue:{row['title']}",
+                    "severity": "high",
+                    "related_criteria": row["related_criteria"] or "roadmap",
+                    "missing_evidences": "timeline_delay",
+                    "suggested_task": "action.replan_overdue_task",
+                    "priority": "high",
+                }
+            )
+
+        blocked_items = conn.execute(
+            """
+            SELECT title, related_criteria
+            FROM roadmap_items
+            WHERE status = 'blocked'
+            ORDER BY id DESC
+            """
+        ).fetchall()
+        for row in blocked_items:
+            gaps_list.append(
+                {
+                    "gap": f"blocked:{row['title']}",
+                    "severity": "critical",
+                    "related_criteria": row["related_criteria"] or "roadmap",
+                    "missing_evidences": "blocked_execution",
+                    "suggested_task": "action.unblock_task",
+                    "priority": "critical",
+                }
+            )
+
+        return gaps_list
+
+    def render_evidence_form(lang: str, data: dict[str, Any]) -> str:
+        form_template = """
+        <label>{{ t('evidence.field.title', lang) }}
+            <input type="text" name="title" value="{{ data.title }}" required />
+        </label>
+        <label>{{ t('evidence.field.type', lang) }}
+            <select name="evidence_type">
+                {% for opt in type_options %}
+                    <option value="{{ opt }}" {% if data.evidence_type == opt %}selected{% endif %}>{{ t('evidence.type.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>{{ t('evidence.field.category', lang) }}
+            <input type="text" name="category" value="{{ data.category }}" required />
+        </label>
+        <label>{{ t('evidence.field.description', lang) }}
+            <textarea name="description" rows="3">{{ data.description }}</textarea>
+        </label>
+        <label>{{ t('evidence.field.link_or_path', lang) }}
+            <input type="text" name="link_or_path" value="{{ data.link_or_path }}" />
+        </label>
+        <label>{{ t('evidence.field.date', lang) }}
+            <input type="date" name="evidence_date" value="{{ data.evidence_date }}" />
+        </label>
+        <label>{{ t('evidence.field.relevance', lang) }}
+            <select name="relevance">
+                {% for opt in range(1, 6) %}
+                    <option value="{{ opt }}" {% if data.relevance|int == opt %}selected{% endif %}>{{ opt }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>{{ t('evidence.field.related_criteria', lang) }}
+            <input type="text" name="related_criteria" value="{{ data.related_criteria }}" />
+        </label>
+        <label>{{ t('evidence.field.status', lang) }}
+            <select name="status">
+                {% for opt in status_options %}
+                    <option value="{{ opt }}" {% if data.status == opt %}selected{% endif %}>{{ t('evidence.status.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>{{ t('evidence.field.notes', lang) }}
+            <textarea name="notes" rows="3">{{ data.notes }}</textarea>
+        </label>
+        <label>
+            <input type="checkbox" name="can_send_to_ai" {% if data.can_send_to_ai %}checked{% endif %} />
+            {{ t('evidence.field.can_send_to_ai', lang) }}
+        </label>
+        """
+        return render_template_string(
+            form_template,
+            lang=lang,
+            t=t,
+            data=data,
+            type_options=EVIDENCE_TYPES,
+            status_options=EVIDENCE_STATUS_OPTIONS,
+        )
+
+    def render_roadmap_form(lang: str, data: dict[str, Any]) -> str:
+        form_template = """
+        <label>{{ t('roadmap.field.title', lang) }}
+            <input type="text" name="title" value="{{ data.title }}" required />
+        </label>
+        <label>{{ t('roadmap.field.description', lang) }}
+            <textarea name="description" rows="3">{{ data.description }}</textarea>
+        </label>
+        <label>{{ t('roadmap.field.category', lang) }}
+            <input type="text" name="category" value="{{ data.category }}" required />
+        </label>
+        <label>{{ t('roadmap.field.priority', lang) }}
+            <select name="priority">
+                {% for opt in priority_options %}
+                    <option value="{{ opt }}" {% if data.priority == opt %}selected{% endif %}>{{ t('roadmap.priority.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>{{ t('roadmap.field.horizon', lang) }}
+            <select name="horizon">
+                {% for opt in horizon_options %}
+                    <option value="{{ opt }}" {% if data.horizon == opt %}selected{% endif %}>{{ t('roadmap.horizon.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>{{ t('roadmap.field.status', lang) }}
+            <select name="status">
+                {% for opt in status_options %}
+                    <option value="{{ opt }}" {% if data.status == opt %}selected{% endif %}>{{ t('roadmap.status.' ~ opt, lang) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>{{ t('roadmap.field.target_date', lang) }}
+            <input type="date" name="target_date" value="{{ data.target_date }}" />
+        </label>
+        <label>{{ t('roadmap.field.estimated_effort', lang) }}
+            <input type="text" name="estimated_effort" value="{{ data.estimated_effort }}" />
+        </label>
+        <label>{{ t('roadmap.field.estimated_impact', lang) }}
+            <input type="text" name="estimated_impact" value="{{ data.estimated_impact }}" />
+        </label>
+        <label>{{ t('roadmap.field.related_criteria', lang) }}
+            <input type="text" name="related_criteria" value="{{ data.related_criteria }}" />
+        </label>
+        """
+        return render_template_string(
+            form_template,
+            lang=lang,
+            t=t,
+            data=data,
+            priority_options=ROADMAP_PRIORITY_OPTIONS,
+            horizon_options=ROADMAP_HORIZON_OPTIONS,
+            status_options=ROADMAP_STATUS_OPTIONS,
+        )
+
     def build_dashboard_summary() -> dict[str, Any]:
         conn = get_db()
         assessment_questions = fetch_assessment_questions_with_answers()
         eb2_score = calculate_eb2_scores(assessment_questions)
 
         evidence_count = conn.execute("SELECT COUNT(*) FROM evidences").fetchone()[0]
-        roadmap_total = conn.execute("SELECT COUNT(*) FROM roadmap_tasks").fetchone()[0]
+        roadmap_total = conn.execute("SELECT COUNT(*) FROM roadmap_items").fetchone()[0]
+        if roadmap_total == 0:
+            roadmap_total = conn.execute("SELECT COUNT(*) FROM roadmap_tasks").fetchone()[0]
         tasks_completed = conn.execute(
-            "SELECT COUNT(*) FROM roadmap_tasks WHERE status IN ('done', 'completed')"
+            "SELECT COUNT(*) FROM roadmap_items WHERE status IN ('completed')"
         ).fetchone()[0]
         tasks_pending = roadmap_total - tasks_completed
 
         niw_assessments = fetch_niw_assessments()
         niw_score = int(round(sum(item["score"] for item in niw_assessments) / max(1, len(niw_assessments))))
 
-        gap_count = sum(1 for item in niw_assessments if item["gaps"].strip())
+        gap_count = len(build_gaps_summary())
         roadmap_progress = int(round((tasks_completed / max(1, roadmap_total)) * 100))
 
         alerts: list[str] = []
@@ -1217,6 +1757,341 @@ def create_app() -> Flask:
         </form>
         """
         return render_page(lang, t("niw.title", lang), body, prongs=prongs, saved=saved)
+
+    @app.route("/evidences")
+    def evidences() -> str:
+        lang = get_selected_language()
+        selected_status = request.args.get("status", "").strip()
+        selected_category = request.args.get("category", "").strip()
+        items = fetch_evidence_list(selected_status, selected_category)
+        categories = sorted({str(item["category"]) for item in fetch_evidence_list() if str(item["category"]).strip()})
+        body = """
+        <h1>{{ t('evidences.title', lang) }}</h1>
+        <p>{{ t('evidences.subtitle', lang) }}</p>
+        <p class="small">{{ t('app.privacy_notice', lang) }}</p>
+        <form method="get" action="{{ url_for('evidences') }}">
+            <input type="hidden" name="lang" value="{{ lang }}" />
+            <div class="cards">
+                <article class="card">
+                    <label>{{ t('filter.status', lang) }}
+                        <select name="status">
+                            <option value="">{{ t('filter.all', lang) }}</option>
+                            {% for opt in statuses %}
+                                <option value="{{ opt }}" {% if selected_status == opt %}selected{% endif %}>{{ t('evidence.status.' ~ opt, lang) }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </article>
+                <article class="card">
+                    <label>{{ t('filter.category', lang) }}
+                        <select name="category">
+                            <option value="">{{ t('filter.all', lang) }}</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </article>
+            </div>
+            <button type="submit">{{ t('filter.apply', lang) }}</button>
+            <a href="{{ url_for('evidence_new', lang=lang) }}">{{ t('evidences.new', lang) }}</a>
+        </form>
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('evidence.field.title', lang) }}</th>
+                    <th>{{ t('evidence.field.type', lang) }}</th>
+                    <th>{{ t('evidence.field.category', lang) }}</th>
+                    <th>{{ t('evidence.field.status', lang) }}</th>
+                    <th>{{ t('evidence.field.relevance', lang) }}</th>
+                    <th>{{ t('evidence.field.can_send_to_ai', lang) }}</th>
+                    <th>{{ t('common.actions', lang) }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>{{ item.title }}</td>
+                        <td>{{ t('evidence.type.' ~ item.evidence_type, lang) }}</td>
+                        <td>{{ item.category }}</td>
+                        <td><span class="badge {{ item.status }}">{{ t('evidence.status.' ~ item.status, lang) }}</span></td>
+                        <td>{{ item.relevance }}/5</td>
+                        <td>{{ t('common.yes' if item.can_send_to_ai else 'common.no', lang) }}</td>
+                        <td>
+                            <div class="actions">
+                                <a href="{{ url_for('evidence_edit', evidence_id=item.id, lang=lang) }}">{{ t('common.edit', lang) }}</a>
+                                <form method="post" action="{{ url_for('evidence_delete', evidence_id=item.id, lang=lang) }}">
+                                    <button type="submit">{{ t('common.delete', lang) }}</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        """
+        return render_page(
+            lang,
+            t("evidences.title", lang),
+            body,
+            items=items,
+            categories=categories,
+            selected_status=selected_status,
+            selected_category=selected_category,
+            statuses=EVIDENCE_STATUS_OPTIONS,
+        )
+
+    @app.route("/evidences/new", methods=["GET", "POST"])
+    def evidence_new() -> str:
+        lang = get_selected_language()
+        if request.method == "POST":
+            upsert_evidence(None, dict(request.form))
+            return redirect(url_for("evidences", lang=lang))
+
+        form_data = {
+            "title": "",
+            "evidence_type": "Outro",
+            "category": "",
+            "description": "",
+            "link_or_path": "",
+            "evidence_date": "",
+            "relevance": 3,
+            "related_criteria": "",
+            "status": "coletar",
+            "notes": "",
+            "can_send_to_ai": 0,
+        }
+        body = """
+        <h1>{{ t('evidences.new', lang) }}</h1>
+        <form method="post" action="{{ url_for('evidence_new', lang=lang) }}">
+            {{ evidence_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(
+            lang,
+            t("evidences.new", lang),
+            body,
+            evidence_form=render_evidence_form(lang, form_data),
+        )
+
+    @app.route("/evidences/<int:evidence_id>/edit", methods=["GET", "POST"])
+    def evidence_edit(evidence_id: int) -> str:
+        lang = get_selected_language()
+        evidence = fetch_evidence_by_id(evidence_id)
+        if not evidence:
+            return redirect(url_for("evidences", lang=lang))
+        if request.method == "POST":
+            upsert_evidence(evidence_id, dict(request.form))
+            return redirect(url_for("evidences", lang=lang))
+        body = """
+        <h1>{{ t('evidences.edit', lang) }}</h1>
+        <form method="post" action="{{ url_for('evidence_edit', evidence_id=evidence.id, lang=lang) }}">
+            {{ evidence_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(
+            lang,
+            t("evidences.edit", lang),
+            body,
+            evidence=evidence,
+            evidence_form=render_evidence_form(lang, evidence),
+        )
+
+    @app.route("/evidences/<int:evidence_id>/delete", methods=["POST"])
+    def evidence_delete(evidence_id: int) -> Any:
+        lang = get_selected_language()
+        delete_evidence(evidence_id)
+        return redirect(url_for("evidences", lang=lang))
+
+    @app.route("/roadmap")
+    def roadmap() -> str:
+        lang = get_selected_language()
+        selected_status = request.args.get("status", "").strip()
+        selected_category = request.args.get("category", "").strip()
+        selected_horizon = request.args.get("horizon", "").strip()
+        items = fetch_roadmap_items(selected_status, selected_category, selected_horizon)
+        categories = sorted({str(item["category"]) for item in fetch_roadmap_items() if str(item["category"]).strip()})
+        body = """
+        <h1>{{ t('roadmap.title', lang) }}</h1>
+        <p>{{ t('roadmap.subtitle', lang) }}</p>
+        <form method="get" action="{{ url_for('roadmap') }}">
+            <input type="hidden" name="lang" value="{{ lang }}" />
+            <div class="cards">
+                <article class="card">
+                    <label>{{ t('filter.status', lang) }}
+                        <select name="status">
+                            <option value="">{{ t('filter.all', lang) }}</option>
+                            {% for opt in status_options %}
+                                <option value="{{ opt }}" {% if selected_status == opt %}selected{% endif %}>{{ t('roadmap.status.' ~ opt, lang) }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </article>
+                <article class="card">
+                    <label>{{ t('filter.category', lang) }}
+                        <select name="category">
+                            <option value="">{{ t('filter.all', lang) }}</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </article>
+                <article class="card">
+                    <label>{{ t('filter.horizon', lang) }}
+                        <select name="horizon">
+                            <option value="">{{ t('filter.all', lang) }}</option>
+                            {% for opt in horizon_options %}
+                                <option value="{{ opt }}" {% if selected_horizon == opt %}selected{% endif %}>{{ t('roadmap.horizon.' ~ opt, lang) }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </article>
+            </div>
+            <button type="submit">{{ t('filter.apply', lang) }}</button>
+            <a href="{{ url_for('roadmap_new', lang=lang) }}">{{ t('roadmap.new', lang) }}</a>
+        </form>
+
+        {% for horizon in horizon_options %}
+            <h2>{{ t('roadmap.horizon.' ~ horizon, lang) }}</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ t('roadmap.field.title', lang) }}</th>
+                        <th>{{ t('roadmap.field.priority', lang) }}</th>
+                        <th>{{ t('roadmap.field.status', lang) }}</th>
+                        <th>{{ t('roadmap.field.target_date', lang) }}</th>
+                        <th>{{ t('common.actions', lang) }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items if item.horizon == horizon %}
+                        <tr>
+                            <td>{{ item.title }}<br /><span class="small">{{ item.category }}</span></td>
+                            <td><span class="badge {{ item.priority }}">{{ t('roadmap.priority.' ~ item.priority, lang) }}</span></td>
+                            <td><span class="badge {{ item.status }}">{{ t('roadmap.status.' ~ item.status, lang) }}</span></td>
+                            <td>{{ item.target_date or '-' }}</td>
+                            <td>
+                                <div class="actions">
+                                    <a href="{{ url_for('roadmap_edit', item_id=item.id, lang=lang) }}">{{ t('common.edit', lang) }}</a>
+                                    <form method="post" action="{{ url_for('roadmap_delete', item_id=item.id, lang=lang) }}">
+                                        <button type="submit">{{ t('common.delete', lang) }}</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
+        """
+        return render_page(
+            lang,
+            t("roadmap.title", lang),
+            body,
+            items=items,
+            categories=categories,
+            selected_status=selected_status,
+            selected_category=selected_category,
+            selected_horizon=selected_horizon,
+            status_options=ROADMAP_STATUS_OPTIONS,
+            horizon_options=ROADMAP_HORIZON_OPTIONS,
+        )
+
+    @app.route("/roadmap/new", methods=["GET", "POST"])
+    def roadmap_new() -> str:
+        lang = get_selected_language()
+        if request.method == "POST":
+            upsert_roadmap_item(None, dict(request.form))
+            return redirect(url_for("roadmap", lang=lang))
+
+        form_data = {
+            "title": "",
+            "description": "",
+            "category": "",
+            "priority": "medium",
+            "horizon": "30_90",
+            "status": "backlog",
+            "target_date": "",
+            "estimated_effort": "",
+            "estimated_impact": "",
+            "related_criteria": "",
+        }
+        body = """
+        <h1>{{ t('roadmap.new', lang) }}</h1>
+        <form method="post" action="{{ url_for('roadmap_new', lang=lang) }}">
+            {{ roadmap_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(lang, t("roadmap.new", lang), body, roadmap_form=render_roadmap_form(lang, form_data))
+
+    @app.route("/roadmap/<int:item_id>/edit", methods=["GET", "POST"])
+    def roadmap_edit(item_id: int) -> str:
+        lang = get_selected_language()
+        item = fetch_roadmap_item_by_id(item_id)
+        if not item:
+            return redirect(url_for("roadmap", lang=lang))
+        if request.method == "POST":
+            upsert_roadmap_item(item_id, dict(request.form))
+            return redirect(url_for("roadmap", lang=lang))
+
+        body = """
+        <h1>{{ t('roadmap.edit', lang) }}</h1>
+        <form method="post" action="{{ url_for('roadmap_edit', item_id=item.id, lang=lang) }}">
+            {{ roadmap_form|safe }}
+            <button type="submit">{{ t('common.save', lang) }}</button>
+        </form>
+        """
+        return render_page(lang, t("roadmap.edit", lang), body, item=item, roadmap_form=render_roadmap_form(lang, item))
+
+    @app.route("/roadmap/<int:item_id>/delete", methods=["POST"])
+    def roadmap_delete(item_id: int) -> Any:
+        lang = get_selected_language()
+        delete_roadmap_item(item_id)
+        return redirect(url_for("roadmap", lang=lang))
+
+    @app.route("/gaps")
+    def gaps() -> str:
+        lang = get_selected_language()
+        items = build_gaps_summary()
+        body = """
+        <h1>{{ t('gaps.title', lang) }}</h1>
+        <p>{{ t('gaps.subtitle', lang) }}</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('gaps.field.gap', lang) }}</th>
+                    <th>{{ t('gaps.field.severity', lang) }}</th>
+                    <th>{{ t('gaps.field.related_criteria', lang) }}</th>
+                    <th>{{ t('gaps.field.missing_evidences', lang) }}</th>
+                    <th>{{ t('gaps.field.suggested_task', lang) }}</th>
+                    <th>{{ t('gaps.field.priority', lang) }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>{{ t(item.gap, lang) if item.gap in locale_keys else item.gap }}</td>
+                        <td><span class="badge {{ item.severity }}">{{ t('severity.' ~ item.severity, lang) }}</span></td>
+                        <td>{{ t(item.related_criteria, lang) if item.related_criteria in locale_keys else item.related_criteria }}</td>
+                        <td>{{ t(item.missing_evidences, lang) if item.missing_evidences in locale_keys else item.missing_evidences }}</td>
+                        <td>{{ t(item.suggested_task, lang) if item.suggested_task in locale_keys else item.suggested_task }}</td>
+                        <td><span class="badge {{ item.priority }}">{{ t('roadmap.priority.' ~ item.priority, lang) }}</span></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        """
+        return render_page(
+            lang,
+            t("gaps.title", lang),
+            body,
+            items=items,
+            locale_keys=set(load_locale(lang).keys()),
+        )
 
     @app.route("/settings", methods=["GET", "POST"])
     def settings() -> str:

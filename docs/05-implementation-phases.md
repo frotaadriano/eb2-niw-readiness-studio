@@ -33,6 +33,14 @@ Status (implementado):
 - CRUD de gaps.
 - CRUD de tarefas e acompanhamento de status.
 
+Status (implementado):
+
+- Rotas entregues: `/evidences`, `/evidences/new`, `/evidences/<id>/edit`, `/evidences/<id>/delete`, `/roadmap`, `/roadmap/new`, `/roadmap/<id>/edit`, `/roadmap/<id>/delete` e `/gaps`.
+- Gestao de evidencias com campos completos de metadados, status e controle de privacidade para envio a IA (`can_send_to_ai`).
+- Roadmap por horizonte (0-30, 30-90, 3-6, 6-12 meses) com prioridade, status, data alvo e criterio relacionado.
+- Gaps automaticos consolidados a partir de assessment baixo, pilares NIW baixos, categorias sem evidencias, tarefas atrasadas e itens bloqueados.
+- Filtros simples por status/categoria/horizonte e badges visuais nas telas operacionais.
+
 ## Fase 4: proposed endeavor e relatorios
 
 - Estruturar campos para proposed endeavor.

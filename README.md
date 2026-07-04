@@ -54,6 +54,15 @@ pytest -q
 - `scripts/`: utilitarios de smoke test, reset e export demo.
 - `locales/`: internacionalizacao PT-BR e EN-US.
 
+### Status atual
+
+Fases 2 e 3 implementadas: dashboard/assessment e gestao operacional de evidencias, roadmap e gaps.
+
+- Rotas: `/dashboard`, `/assessment`, `/niw`, `/evidences`, `/roadmap`, `/gaps`.
+- CRUD de evidencias com tipo, categoria, relevancia, criterio relacionado, status e flag de envio para IA.
+- CRUD de tarefas de roadmap com horizonte, prioridade, status, data alvo, esforco e impacto.
+- Consolidacao automatica de gaps com recomendacoes de acao.
+
 ### Privacidade e dados
 
 - Use apenas dados fake/demo neste repositorio publico.
@@ -113,10 +122,13 @@ pytest -q
 
 ### Current status
 
-Phase 2 implemented: readiness dashboard and assessments with local persistence.
+Phases 2 and 3 implemented: readiness dashboard/assessments plus operational evidence, roadmap, and gaps management.
 
-- New routes: `/dashboard`, `/assessment`, `/niw`.
+- Routes: `/dashboard`, `/assessment`, `/niw`, `/evidences`, `/roadmap`, `/gaps`.
 - EB-2 assessment with weighted questions (0-5), justification, status badge, and optional evidence references.
 - NIW assessment for the 3 prongs with score, observations, gaps, practical recommendations, and suggested tasks.
+- Evidence CRUD with metadata fields, status, and AI sharing privacy flag.
+- Roadmap CRUD with horizon, priority, status, target date, estimated effort, and estimated impact.
+- Automatic gaps consolidation with actionable recommendations.
 - Educational scoring engine with 0-100 dimension scores, 0-100 overall score, and readiness classification bands.
 - Persistent legal/organizational disclaimers across user-facing pages.

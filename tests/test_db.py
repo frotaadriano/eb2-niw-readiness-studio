@@ -22,6 +22,7 @@ def test_init_db_creates_tables(tmp_path) -> None:
     assert "niw_prongs" in tables
     assert "evidences" in tables
     assert "roadmap_tasks" in tables
+    assert "roadmap_items" in tables
     assert "proposed_endeavor" in tables
     assert "authority_plan" in tables
     assert "github_projects" in tables
