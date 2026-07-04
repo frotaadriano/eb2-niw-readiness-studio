@@ -41,6 +41,23 @@ def test_phase4_pages_are_available(client_with_db) -> None:
         assert response.status_code == 200
 
 
+def test_main_http_routes_are_available(client_with_db) -> None:
+    client, _ = client_with_db
+
+    for route in [
+        "/?lang=en-US",
+        "/dashboard?lang=en-US",
+        "/assessment?lang=en-US",
+        "/niw?lang=en-US",
+        "/evidences?lang=en-US",
+        "/roadmap?lang=en-US",
+        "/gaps?lang=en-US",
+        "/report/export?lang=en-US",
+    ]:
+        response = client.get(route)
+        assert response.status_code == 200
+
+
 def test_proposed_endeavor_crud(client_with_db) -> None:
     client, db_path = client_with_db
 

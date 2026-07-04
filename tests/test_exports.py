@@ -1,4 +1,6 @@
 import shutil
+import csv
+import io
 from pathlib import Path
 
 import pytest
@@ -90,3 +92,40 @@ def test_report_export_route_excludes_private_evidences(client_with_db) -> None:
 
     # Keep db_path in fixture usage explicit so CI catches setup regressions.
     assert db_path.exists()
+
+
+def test_report_export_supports_markdown_and_csv(client_with_db) -> None:
+    client, _ = client_with_db
+
+    create_public = client.post(
+        "/evidences/new?lang=en-US",
+        data={
+            "title": "CSV Evidence",
+            "evidence_type": "GitHub",
+            "category": "assessment.category.public_projects",
+            "description": "Public",
+            "link_or_path": "https://example.com/csv",
+            "evidence_date": "2026-07-04",
+            "relevance": "4",
+            "related_criteria": "Q_PUBLIC_PROJECTS",
+            "status": "pronto",
+            "notes": "",
+            "can_send_to_ai": "on",
+        },
+    )
+    assert create_public.status_code == 302
+
+    markdown_response = client.get("/report/export?lang=en-US&download=1&format=markdown")
+    assert markdown_response.status_code == 200
+    assert markdown_response.mimetype == "text/markdown"
+    markdown_text = markdown_response.get_data(as_text=True)
+    assert "# Organizational report" in markdown_text
+    assert "CSV Evidence" in markdown_text
+
+    csv_response = client.get("/report/export?lang=en-US&download=1&format=csv")
+    assert csv_response.status_code == 200
+    assert csv_response.mimetype == "text/csv"
+    csv_text = csv_response.get_data(as_text=True)
+    rows = list(csv.reader(io.StringIO(csv_text)))
+    assert rows[0] == ["section", "field", "value"]
+    assert any(row[2] == "CSV Evidence" for row in rows)

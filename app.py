@@ -994,6 +994,60 @@ def build_export_payload(profile: dict[str, Any], evidences: list[dict[str, Any]
     }
 
 
+def build_markdown_report(payload: dict[str, Any]) -> str:
+    lines = [
+        "# Organizational report",
+        "",
+        payload.get("disclaimer", "Educational and organizational only. Not legal or immigration advice."),
+        "",
+        "## Profile",
+    ]
+    profile = payload.get("profile") if isinstance(payload.get("profile"), dict) else {}
+    if profile:
+        for key, value in profile.items():
+            lines.append(f"- {key}: {value}")
+    else:
+        lines.append("- No profile data available.")
+
+    lines.extend(["", "## Evidences"])
+    evidences = payload.get("evidences") if isinstance(payload.get("evidences"), list) else []
+    if evidences:
+        for evidence in evidences:
+            if not isinstance(evidence, dict):
+                continue
+            title = evidence.get("title", "Untitled")
+            category = evidence.get("category", "")
+            status = evidence.get("status", "")
+            lines.append(f"- {title} ({category}) {status}".strip())
+    else:
+        lines.append("- No evidences available.")
+
+    return "\n".join(lines)
+
+
+def build_csv_report(payload: dict[str, Any]) -> str:
+    import csv
+    import io
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["section", "field", "value"])
+
+    profile = payload.get("profile") if isinstance(payload.get("profile"), dict) else {}
+    for key, value in profile.items():
+        writer.writerow(["profile", key, value])
+
+    evidences = payload.get("evidences") if isinstance(payload.get("evidences"), list) else []
+    for evidence in evidences:
+        if not isinstance(evidence, dict):
+            continue
+        writer.writerow(["evidence", "title", evidence.get("title", "")])
+        writer.writerow(["evidence", "category", evidence.get("category", "")])
+        writer.writerow(["evidence", "status", evidence.get("status", "")])
+
+    return output.getvalue()
+
+
 class ProviderConfigError(RuntimeError):
     pass
 
@@ -3808,13 +3862,25 @@ def create_app() -> Flask:
     def export_report() -> Any:
         lang = get_selected_language()
         payload = build_organizational_report_payload()
+        format_name = request.args.get("format", "json").strip().lower()
 
         if request.args.get("download") == "1":
-            content = json.dumps(payload, ensure_ascii=False, indent=2)
+            if format_name == "markdown":
+                content = build_markdown_report(payload)
+                mimetype = "text/markdown"
+                filename = "readiness_report.md"
+            elif format_name == "csv":
+                content = build_csv_report(payload)
+                mimetype = "text/csv"
+                filename = "readiness_report.csv"
+            else:
+                content = json.dumps(payload, ensure_ascii=False, indent=2)
+                mimetype = "application/json"
+                filename = "readiness_report.json"
             return app.response_class(
                 content,
-                mimetype="application/json",
-                headers={"Content-Disposition": "attachment; filename=readiness_report.json"},
+                mimetype=mimetype,
+                headers={"Content-Disposition": f"attachment; filename={filename}"},
             )
 
         body = """
@@ -3823,6 +3889,11 @@ def create_app() -> Flask:
         <p class="small">{{ t('report.private_filter_note', lang) }}</p>
         <p>
             <a href="{{ url_for('export_report', lang=lang, download='1') }}">{{ t('report.download_json', lang) }}</a>
+        </p>
+        <p class="small">
+            <a href="{{ url_for('export_report', lang=lang, download='1', format='markdown') }}">Markdown</a>
+            |
+            <a href="{{ url_for('export_report', lang=lang, download='1', format='csv') }}">CSV</a>
         </p>
         <div class="cards">
             <article class="card"><h3>{{ t('dashboard.card.evidences', lang) }}</h3><p class="metric">{{ payload.evidences|length }}</p></article>
